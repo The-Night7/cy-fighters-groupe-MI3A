@@ -6,11 +6,19 @@ typedef struct {
 } Equipe;
 
 typedef struct {
-    int pvc; // points de vie courrant
-    int pvm; // points de vie max
+    float pvc; // points de vie courrant
+    float pvm; // points de vie max
     int attaque;
     int defense;
     int agilite;
     int vitesse;
-
+    Techniques techniques[3];
 } Combattant;
+
+typedef struct {
+    char nom[50];
+    int valeur; // valeur appliquée à une propriété
+    char description[250];
+    int nb_tour_actifs;
+    int nb_tour_recharge;
+} Techniques;
