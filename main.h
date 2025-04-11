@@ -8,10 +8,10 @@ typedef struct {
 typedef struct {
     float pvc; // points de vie courrant
     float pvm; // points de vie max
-    int attaque;
-    int defense;
-    int agilite;
-    int vitesse;
+    float attaque;
+    float defense;
+    float agilite;
+    float vitesse;
     Techniques techniques[3];
 } Combattant;
 
