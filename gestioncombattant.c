@@ -1,5 +1,8 @@
 #include "gestioncombattant.h"
 
+/*fonction qui remplie la structure Technique (1 appel de la fct = les données de UNE technique sont stocké dans différentes variables),
+si la technique possède un effet(exemple : étourdissement) alors la fonction est initialisée avec possède = true,
+lorsque possède = true, la fonction remplie des informations supplémentaires comme le nom de l'effet et la durée de cet effet. */
 void init_technique(Technique *tech, const char *nom, const char *description, const char *cible,
                     float puissance, int nb_tour_recharge, bool possede, const char *nom_effet, int nb_tour_actifs)
 {
@@ -18,6 +21,8 @@ void init_technique(Technique *tech, const char *nom, const char *description, c
     return;
 }
 
+/*Permet de free les données des combattants après un combat par exemple
+(d'ailleurs j'ai oublié de free nom_effet, je m'en occuperai)*/
 void detruire_combattant(Combattant *combattant)
 {
     if (!combattant)
@@ -32,6 +37,8 @@ void detruire_combattant(Combattant *combattant)
     free(combattant);
 }
 
+/*Dans cette fonction permet de créer les combattants en utilisant la fonction init_techniques
+Plus globalement cette fonction contient toutes les données de toute les combattant pour les stocker à dans des cases mémoire en cas de besoin.*/
 Combattant *creer_combattant(const char *nom)
 {
     if (!nom)
