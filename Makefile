@@ -1,29 +1,33 @@
 # Nom de l'exécutable
 EXEC = cyfighter
 
-# Liste des fichiers source
+# Tous les fichiers source .c du dossier courant
 SRC = $(wildcard *.c)
 
-# Génère les fichiers objets (.o) à partir des fichiers source
+# Fichiers objets correspondants
 OBJ = $(SRC:.c=.o)
 
-# Options du compilateur
+# Compilateur
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+
+# Flags de compilation (inclusion SDL2)
+CFLAGS = -Wall -Wextra -g -I/usr/include/SDL2 -D_REENTRANT
+
+# Flags de liaison (linker)
+LDFLAGS = -lSDL2 
 
 # Règle principale
 all: $(EXEC)
 
-# Compilation de l'exécutable
+# Règle de création de l'exécutable
 $(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Nettoyer les fichiers compilés
+# Nettoyage
 clean:
 	rm -f *.o $(EXEC)
 
-# Forcer la recompilation complète
+# Recompilation complète
 rebuild: clean all
 
-# Éviter que des fichiers comme "clean" soient interprétés comme fichiers
 .PHONY: all clean rebuild
