@@ -1,33 +1,25 @@
-# Nom de l'exécutable
-EXEC = cyfighter
+CC       = gcc
+CFLAGS   = -Wall -Iinclude `sdl2-config --cflags`
+LIBS     = `sdl2-config --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 
-# Tous les fichiers source .c du dossier courant
-SRC = $(wildcard *.c)
+SRC      = src/menu.c
+EXEC     = bin/jeu
 
-# Fichiers objets correspondants
-OBJ = $(SRC:.c=.o)
+.PHONY: all compile jeu clean
 
-# Compilateur
-CC = gcc
-
-# Flags de compilation (inclusion SDL2)
-CFLAGS = -Wall -Wextra -g -I/usr/include/SDL2 -D_REENTRANT
-
-# Flags de liaison (linker)
-LDFLAGS = -lSDL2 
-
-# Règle principale
 all: $(EXEC)
 
-# Règle de création de l'exécutable
-$(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(EXEC): $(SRC)
+	@mkdir -p bin
+	@$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	@echo "✅ Compilation réussie : $(EXEC)"
 
-# Nettoyage
+compile: all
+
+jeu: all
+	@echo "🎮 Lancement du jeu..."
+	@./$(EXEC)
+
 clean:
-	rm -f *.o $(EXEC)
-
-# Recompilation complète
-rebuild: clean all
-
-.PHONY: all clean rebuild
+	@echo "🧹 Nettoyage..."
+	@rm -f $(EXEC)
