@@ -102,7 +102,7 @@ void attaque_base(CombatantState* attaquant, CombatantState* cible) {
            cible->combattant->nom,
            degats);
 }
-
+/*  */
 void utiliser_technique(CombatantState* attaquant, int tech_index, CombatantState* cible) {
     /**
     * Utilise une technique spéciale d'un combattant sur une cible.
