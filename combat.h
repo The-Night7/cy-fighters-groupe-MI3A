@@ -32,7 +32,6 @@ void nettoyer_combat(Combat* combat);                              // Libère la
 
 // Fonctions d'action
 void attaque_base(CombatantState* attaquant, CombatantState* cible); // Effectue une attaque de base
-void utiliser_technique(CombatantState* attaquant, int tech_index, CombatantState* cible);
 void utiliser_technique(CombatantState* attaquant, int tech_index, CombatantState* cible); // Utilise une technique spéciale
 
 // Fonctions utilitaires
