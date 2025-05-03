@@ -6,7 +6,7 @@ SRC      = src/menu.c
 EXEC     = bin/jeu
 EAU_EXEC = bin/eau
 EAU_SRC  = interface_terminal.c combat.c gestioncombattant.c
-EAU_LIBS = -lm  # Ajout de la bibliothèque mathématique
+EAU_LIBS = -lm 
 
 .PHONY: all compile jeu clean
 
