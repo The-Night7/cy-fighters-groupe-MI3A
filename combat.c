@@ -13,7 +13,8 @@ static float calculer_degats(Combattant* attaquant, Technique* tech, Combattant*
     // Calcul des dégâts bruts
     float puissance = tech ? tech->puissance : 1.0f; // Attaque de base = puissance 1
     float base = attaquant->attaque * puissance;
-    float reduction = cible->defense * 0.2f;
+    // Correction : convertir le float en int pour le modulo
+    float reduction = (cible->defense * 0.2f) + (rand() % (int)(cible->defense*0.8f));
     float degats = fmaxf(base - reduction, 0);
 
     // Calcul de la chance d'esquive en fonction de l'agilité de la cible
@@ -33,12 +34,12 @@ void initialiser_combat(Combat* combat, Equipe* eq1, Equipe* eq2) {
 
     // Création des états de combat pour chaque combattant des deux équipes
     int total = eq1->member_count + eq2->member_count;
-    combat->participants = malloc(total * sizeof(CombatantState));
+    combat->participants = malloc(total * sizeof(EtatCombattant));
 
     for (int i = 0; i < total; i++) {
         // On récupère le bon combattant selon l'équipe
         Combattant* c = (i < eq1->member_count) ? &eq1->members[i] : &eq2->members[i - eq1->member_count];
-        combat->participants[i] = (CombatantState){
+        combat->participants[i] = (EtatCombattant){
             .combattant = c,
             .turn_meter = 0.0f,
             .controleur = (i < eq1->member_count) ? JOUEUR : ORDI
@@ -74,27 +75,68 @@ void gerer_tour_combat(Combat* combat) {
         // Incrémentation de la jauge de tour selon la vitesse
         combat->participants[i].turn_meter += combat->participants[i].combattant->speed;
         if (combat->participants[i].turn_meter >= 100.0f) {
+            afficher_statuts_combat(combat);
             printf("%s peut agir!\n", combat->participants[i].combattant->nom);
-
-            // Ici, il faudra intégrer l'IHM pour le choix de l'action
-            // Par défaut : attaque le premier adversaire encore en vie
-            for (int j = 0; j < combat->nombre_participants; j++) {
-                if (combat->participants[j].combattant->Vie.courrante > 0 &&
-                    combat->participants[j].controleur != combat->participants[i].controleur) {
-
-                    attaque_base(&combat->participants[i], &combat->participants[j]);
-                    break;
+            
+            if (combat->participants[i].controleur == JOUEUR) {
+                // Tour du joueur
+                afficher_menu_actions(&combat->participants[i]);
+                
+                int choix;
+                scanf("%d", &choix);
+                
+                // Trouver une cible valide
+                int cible_index = choisir_cible(combat, combat->participants[i].controleur);
+                EtatCombattant* cible = NULL;
+                
+                // Trouver la cible correspondante dans participants[]
+                for (int j = 0, count = 0; j < combat->nombre_participants; j++) {
+                    if (!est_ko(combat->participants[j].combattant) && 
+                        combat->participants[j].controleur != combat->participants[i].controleur) {
+                        if (count == cible_index) {
+                            cible = &combat->participants[j];
+                            break;
+                        }
+                        count++;
+                    }
+                }
+                
+                if (choix == 1) {
+                    attaque_base(&combat->participants[i], cible);
+                } else if (choix >= 2 && choix <= MAX_TECHNIQUES+1) {
+                    utiliser_technique(&combat->participants[i], choix-2, cible);
+                }
+            } else {
+                // Tour de l'IA (comportement simple)
+                for (int j = 0; j < combat->nombre_participants; j++) {
+                    if (!est_ko(combat->participants[j].combattant) && 
+                        combat->participants[j].controleur != combat->participants[i].controleur) {
+                        // L'IA utilise aléatoirement une attaque de base ou une technique
+                        if (rand() % 2 == 0) {
+                            attaque_base(&combat->participants[i], &combat->participants[j]);
+                        } else {
+                            // Choisir une technique aléatoire disponible
+                            for (int k = 0; k < MAX_TECHNIQUES; k++) {
+                                if (combat->participants[i].cooldowns[k] == 0 && 
+                                    combat->participants[i].combattant->techniques[k].activable) {
+                                    utiliser_technique(&combat->participants[i], k, &combat->participants[j]);
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
                 }
             }
-
             // Réinitialise la jauge de tour après l'action
             combat->participants[i].turn_meter = 0;
         }
+        
     }
 }
 
 // Effectue une attaque de base d'un combattant sur une cible
-void attaque_base(CombatantState* attaquant, CombatantState* cible) {
+void attaque_base(EtatCombattant* attaquant, EtatCombattant* cible) {
     float degats = calculer_degats(attaquant->combattant, NULL, cible->combattant);
     cible->combattant->Vie.courrante -= degats;
     printf("%s attaque %s et inflige %.1f dégâts!\n",
@@ -103,7 +145,7 @@ void attaque_base(CombatantState* attaquant, CombatantState* cible) {
            degats);
 }
 /*  */
-void utiliser_technique(CombatantState* attaquant, int tech_index, CombatantState* cible) {
+void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattant* cible) {
     /**
     * Utilise une technique spéciale d'un combattant sur une cible.
     * @param attaquant : le combattant qui utilise la technique
@@ -195,7 +237,179 @@ bool est_ko(Combattant* c) {
     return c->Vie.courrante <= 0;
 }
 
-// Fonctions à implémenter :
-// - Système d'effets temporaires
-// - Interface utilisateur plus élaborée
-// - Intelligence artificielle pour l'ordinateur
+void appliquer_effets(Combat* combat) {
+    for (int i = 0; i < combat->nombre_participants; i++) {
+        EtatCombattant* cs = &combat->participants[i];
+        
+        // Parcours des effets en cours
+        for (int j = 0; j < cs->nb_effets; j++) {
+            EffetTemporaire* eff = &cs->effets[j];
+            
+            switch (eff->type) {
+                case EFFET_AUCUN:
+                    // Ne rien faire pour EFFET_AUCUN
+                    break;
+                    
+                case EFFET_POISON:
+                    cs->combattant->Vie.courrante -= eff->puissance;
+                    printf("%s subit %.1f dégâts de poison!\n", 
+                           cs->combattant->nom, eff->puissance);
+                    break;
+                
+                case EFFET_BOOST_ATTAQUE:
+                    // Boost déjà appliqué lors de l'initialisation
+                    break;
+                    
+                case EFFET_ETOURDISSEMENT:
+                    // Implémenter l'effet d'étourdissement ici
+                    // Par exemple, empêcher le combattant d'agir pendant ce tour
+                    printf("%s est étourdi et ne peut pas agir!\n", cs->combattant->nom);
+                    break;
+                    
+                case EFFET_BOOST_DEFENSE:
+                    // Boost déjà appliqué lors de l'initialisation
+                    break;
+            }
+            
+            // Décrémenter le compteur
+            eff->tours_restants--;
+            
+            // Si effet terminé
+            if (eff->tours_restants <= 0) {
+                retirer_effet(cs, eff->type);
+                j--; // On revient en arrière car l'effet a été retiré
+            }
+        }
+    }
+}
+
+// Fonction pour retirer un effet
+void retirer_effet(EtatCombattant* cs, TypeEffet type) {
+    for (int i = 0; i < cs->nb_effets; i++) {
+        if (cs->effets[i].type == type) {
+            // Déplacer les effets suivants
+            for (int j = i; j < cs->nb_effets - 1; j++) {
+                cs->effets[j] = cs->effets[j+1];
+            }
+            cs->nb_effets--;
+            
+            // Annuler l'effet si nécessaire
+            switch (type) {
+                case EFFET_AUCUN:
+                    // Ne rien faire pour EFFET_AUCUN
+                    break;
+                    
+                case EFFET_POISON:
+                    // Le poison n'a pas besoin d'être annulé, il suffit de ne plus l'appliquer
+                    break;
+                    
+                case EFFET_BOOST_ATTAQUE:
+                    cs->combattant->attaque /= (1 + cs->effets[i].puissance);
+                    break;
+                    
+                case EFFET_ETOURDISSEMENT:
+                    // L'étourdissement n'a pas besoin d'être annulé
+                    printf("%s n'est plus étourdi.\n", cs->combattant->nom);
+                    break;
+                    
+                case EFFET_BOOST_DEFENSE:
+                    cs->combattant->defense /= (1 + cs->effets[i].puissance);
+                    break;
+            }
+            
+            printf("L'effet %d se dissipe sur %s\n", type, cs->combattant->nom);
+            return;
+        }
+    }
+}
+
+// Nettoyage de la mémoire
+void nettoyer_combat(Combat* combat) {
+    if (combat->participants) {
+        free(combat->participants);
+        combat->participants = NULL;
+    }
+    combat->nombre_participants = 0;
+}
+
+// Affichage de l'état du combat
+void afficher_combat(const Combat* combat) {
+    printf("\n--- État du combat (Tour %d) ---\n", combat->tour);
+    
+    for (int i = 0; i < combat->nombre_participants; i++) {
+        const EtatCombattant* cs = &combat->participants[i];
+        printf("%s [%.0f/%.0f PV] - TM: %.1f - Contrôle: %s\n",
+               cs->combattant->nom,
+               cs->combattant->Vie.courrante,
+               cs->combattant->Vie.max,
+               cs->turn_meter,
+               cs->controleur == JOUEUR ? "Joueur" : "IA");
+               
+        // Afficher les cooldowns
+        for (int j = 0; j < MAX_TECHNIQUES; j++) {
+            if (cs->cooldowns[j] > 0) {
+                printf("  %s: %d tours\n", 
+                       cs->combattant->techniques[j].nom,
+                       cs->cooldowns[j]);
+            }
+        }
+    }
+}
+
+// Affiche les statuts des équipes
+void afficher_statuts_combat(Combat* combat) {
+    printf("\n=== TOUR %d ===\n", combat->tour);
+    
+    // Équipe 1
+    printf("\nÉquipe 1:\n");
+    for (int i = 0; i < combat->equipe1->member_count; i++) {
+        Combattant* c = &combat->equipe1->members[i];
+        printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max);
+        if (est_ko(c)) printf(" (KO)");
+        printf("\n");
+    }
+    
+    // Équipe 2
+    printf("\nÉquipe 2:\n");
+    for (int i = 0; i < combat->equipe2->member_count; i++) {
+        Combattant* c = &combat->equipe2->members[i];
+        printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max);
+        if (est_ko(c)) printf(" (KO)");
+        printf("\n");
+    }
+    printf("\n");
+}
+
+// Affiche le menu des actions disponibles
+void afficher_menu_actions(EtatCombattant* joueur) {
+    printf("\n%s, choisissez une action:\n", joueur->combattant->nom);
+    printf("1. Attaque de base\n");
+    
+    // Affiche les techniques disponibles
+    for (int i = 0; i < MAX_TECHNIQUES; i++) {
+        Technique* tech = &joueur->combattant->techniques[i];
+        if (tech->activable && joueur->cooldowns[i] == 0) {
+            printf("%d. %s", i+2, tech->nom);
+            if (tech->puissance <= 0) printf(" (Soin)");
+            printf("\n");
+        }
+    }
+}
+
+// Permet de choisir une cible
+int choisir_cible(Combat* combat, TypeJoueur controleur) {
+    printf("\nChoisissez une cible:\n");
+    int index = 0;
+    
+    for (int i = 0; i < combat->nombre_participants; i++) {
+        EtatCombattant* c = &combat->participants[i];
+        if (!est_ko(c->combattant) && c->controleur != controleur) {
+            printf("%d. %s (%.0f PV)\n", index+1, c->combattant->nom, c->combattant->Vie.courrante);
+            index++;
+        }
+    }
+    
+    int choix;
+    scanf("%d", &choix);
+    return choix-1; // Retourne l'index dans la liste des cibles valides
+}
