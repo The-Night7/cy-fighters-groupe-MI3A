@@ -57,7 +57,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->attaque = 100;
         combattant->defense = 20;
         combattant->agility = 0;
-        combattant->speed = 20;
+        combattant->speed = 100;
 
         init_technique(&combattant->techniques[0], "Tempête",
                        "Inflige des dégats d'eau majeurs. Doit se recharger.",
@@ -82,7 +82,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->attaque = 100;
         combattant->defense = 20;
         combattant->agility = 0;
-        combattant->speed = 20;
+        combattant->speed = 60;
 
         init_technique(&combattant->techniques[0], "Poing de la revanche",
                        "Inflige des dégats mineurs",
