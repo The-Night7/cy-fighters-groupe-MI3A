@@ -33,7 +33,7 @@ void detruire_combattant(Combattant *combattant)
     {
         free(combattant->techniques[i].nom);
         free(combattant->techniques[i].description);
-        free(combattant->techniques[i].nom_effet);
+        free(combattant->techniques[i].Effet.nom);
     }
     free(combattant);
 }
@@ -49,6 +49,7 @@ Combattant *creer_combattant(const char *nom)
         return NULL;
     combattant->nom = strdup(nom);
 
+    // Personnage
     if (strcmp(nom, "Musu") == 0)
     {
 
@@ -72,6 +73,31 @@ Combattant *creer_combattant(const char *nom)
                        "Restaure 20 % de vie. S'applique un boost de dégats pendant 2 tours",
                        "Un allié",
                        0, 0, 1, "Boost dégats", 2);
+    }
+
+    if (strcmp(nom, "Freettle") == 0)
+    {
+
+        combattant->Vie.courrante = combattant->Vie.max = 200;
+        combattant->attaque = 100;
+        combattant->defense = 20;
+        combattant->agility = 0;
+        combattant->speed = 20;
+
+        init_technique(&combattant->techniques[0], "Poing de la revanche",
+                       "Inflige des dégats mineurs",
+                       "Un ennemi",
+                       0.3, 0, 0, NULL, 0);
+
+        init_technique(&combattant->techniques[1], "Etincelle de feu",
+                       "Inflige des dégats Mineurs et brûle la cible",
+                       "Un ennemi",
+                       0, 2, 1, "Brulûre", 3);
+
+        init_technique(&combattant->techniques[2], "Mur infranchissable",
+                       "Applique un bouclier moyen à la cible",
+                       "Un allié",
+                       0, 0, 1, "Bouclier Moyen", 2);
     }
 
     else
