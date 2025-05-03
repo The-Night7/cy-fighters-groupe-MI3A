@@ -13,7 +13,8 @@ typedef enum {
     EFFET_POISON,
     EFFET_ETOURDISSEMENT,
     EFFET_BOOST_ATTAQUE,
-    EFFET_BOOST_DEFENSE
+    EFFET_BOOST_DEFENSE,
+    EFFET_BRULURE
 } TypeEffet;
 
 typedef struct {

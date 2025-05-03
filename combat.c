@@ -42,7 +42,8 @@ void initialiser_combat(Combat* combat, Equipe* eq1, Equipe* eq2) {
         combat->participants[i] = (EtatCombattant){
             .combattant = c,
             .turn_meter = 0.0f,
-            .controleur = (i < eq1->member_count) ? JOUEUR : ORDI
+            .controleur = (i < eq1->member_count) ? JOUEUR : ORDI,
+            .nb_effets = 0  // Initialisation du nombre d'effets à 0
         };
         // Initialisation des cooldowns de techniques
         for (int j = 0; j < MAX_TECHNIQUES; j++) {
@@ -197,11 +198,17 @@ void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattan
 
         // Application d'un effet spécial si la technique en possède un
         if (tech->Effet.possede) {
-            // Ici tu pourrais ajouter l'effet dans une liste d'effets temporaires sur la cible
-            // Exemple d'affichage :
-            printf("%s applique l'effet spécial '%s' à %s pour %d tours !\n",
-                   attaquant->combattant->nom, tech->Effet.nom, cible->combattant->nom, tech->Effet.nb_tour_actifs);
-            // À compléter selon ta structure d'effets temporaires
+            // Si l'effet est de type brûlure, l'appliquer
+            if (strcmp(tech->Effet.nom, "Brûlure") == 0) {
+                appliquer_effet(cible, EFFET_BRULURE, tech->Effet.nb_tour_actifs, attaquant->combattant->attaque * 0.15f);
+                printf("%s enflamme %s pour %d tours!\n", 
+                       attaquant->combattant->nom, cible->combattant->nom, tech->Effet.nb_tour_actifs);
+            }
+            // Autres effets existants...
+            else {
+                printf("%s applique l'effet spécial '%s' à %s pour %d tours !\n",
+                       attaquant->combattant->nom, tech->Effet.nom, cible->combattant->nom, tech->Effet.nb_tour_actifs);
+            }
         }
     }
 
@@ -237,6 +244,42 @@ bool est_ko(Combattant* c) {
     return c->Vie.courrante <= 0;
 }
 
+// Fonction pour appliquer un effet à un combattant
+void appliquer_effet(EtatCombattant* cible, TypeEffet effet, int duree, float puissance) {
+    // Vérifier si l'effet existe déjà
+    for (int i = 0; i < cible->nb_effets; i++) {
+        if (cible->effets[i].type == effet) {
+            // Mettre à jour la durée et la puissance si l'effet est déjà présent
+            cible->effets[i].tours_restants = duree;
+            cible->effets[i].puissance = puissance;
+            return;
+        }
+    }
+    
+    // Ajouter le nouvel effet s'il n'existe pas déjà et s'il y a de la place
+    if (cible->nb_effets < MAX_EFFECTS) {
+        cible->effets[cible->nb_effets] = (EffetTemporaire){
+            .type = effet,
+            .tours_restants = duree,
+            .puissance = puissance
+        };
+        cible->nb_effets++;
+        
+        // Appliquer les effets immédiats si nécessaire
+        switch (effet) {
+            case EFFET_BOOST_ATTAQUE:
+                cible->combattant->attaque *= (1 + puissance);
+                break;
+            case EFFET_BOOST_DEFENSE:
+                cible->combattant->defense *= (1 + puissance);
+                break;
+            default:
+                // Pas d'effet immédiat pour les autres types
+                break;
+        }
+    }
+}
+
 void appliquer_effets(Combat* combat) {
     for (int i = 0; i < combat->nombre_participants; i++) {
         EtatCombattant* cs = &combat->participants[i];
@@ -269,6 +312,14 @@ void appliquer_effets(Combat* combat) {
                 case EFFET_BOOST_DEFENSE:
                     // Boost déjà appliqué lors de l'initialisation
                     break;
+                    
+                case EFFET_BRULURE:
+                    // La brûlure inflige des dégâts qui augmentent à chaque tour
+                    float degats_brulure = eff->puissance * (4 - eff->tours_restants);
+                    cs->combattant->Vie.courrante -= degats_brulure;
+                    printf("%s subit %.1f dégâts de brûlure! Les flammes s'intensifient!\n", 
+                           cs->combattant->nom, degats_brulure);
+                    break;
             }
             
             // Décrémenter le compteur
@@ -287,12 +338,6 @@ void appliquer_effets(Combat* combat) {
 void retirer_effet(EtatCombattant* cs, TypeEffet type) {
     for (int i = 0; i < cs->nb_effets; i++) {
         if (cs->effets[i].type == type) {
-            // Déplacer les effets suivants
-            for (int j = i; j < cs->nb_effets - 1; j++) {
-                cs->effets[j] = cs->effets[j+1];
-            }
-            cs->nb_effets--;
-            
             // Annuler l'effet si nécessaire
             switch (type) {
                 case EFFET_AUCUN:
@@ -315,7 +360,18 @@ void retirer_effet(EtatCombattant* cs, TypeEffet type) {
                 case EFFET_BOOST_DEFENSE:
                     cs->combattant->defense /= (1 + cs->effets[i].puissance);
                     break;
+                    
+                case EFFET_BRULURE:
+                    // La brûlure n'a pas besoin d'être annulée, elle s'éteint simplement
+                    printf("Les flammes sur %s s'éteignent.\n", cs->combattant->nom);
+                    break;
             }
+            
+            // Déplacer les effets suivants
+            for (int j = i; j < cs->nb_effets - 1; j++) {
+                cs->effets[j] = cs->effets[j+1];
+            }
+            cs->nb_effets--;
             
             printf("L'effet %d se dissipe sur %s\n", type, cs->combattant->nom);
             return;
@@ -353,6 +409,32 @@ void afficher_combat(const Combat* combat) {
                        cs->cooldowns[j]);
             }
         }
+        
+        // Afficher les effets actifs
+        for (int j = 0; j < cs->nb_effets; j++) {
+            printf("  Effet: ");
+            switch (cs->effets[j].type) {
+                case EFFET_POISON:
+                    printf("Poison");
+                    break;
+                case EFFET_ETOURDISSEMENT:
+                    printf("Étourdissement");
+                    break;
+                case EFFET_BOOST_ATTAQUE:
+                    printf("Boost d'attaque");
+                    break;
+                case EFFET_BOOST_DEFENSE:
+                    printf("Boost de défense");
+                    break;
+                case EFFET_BRULURE:
+                    printf("Brûlure");
+                    break;
+                default:
+                    printf("Inconnu");
+                    break;
+            }
+            printf(" (%d tours restants)\n", cs->effets[j].tours_restants);
+        }
     }
 }
 
@@ -366,6 +448,36 @@ void afficher_statuts_combat(Combat* combat) {
         Combattant* c = &combat->equipe1->members[i];
         printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max);
         if (est_ko(c)) printf(" (KO)");
+        
+        // Afficher les effets actifs
+        for (int j = 0; j < combat->nombre_participants; j++) {
+            if (combat->participants[j].combattant == c && combat->participants[j].nb_effets > 0) {
+                printf(" [");
+                for (int k = 0; k < combat->participants[j].nb_effets; k++) {
+                    switch (combat->participants[j].effets[k].type) {
+                        case EFFET_POISON:
+                            printf("Poison");
+                            break;
+                        case EFFET_ETOURDISSEMENT:
+                            printf("Étourdi");
+                            break;
+                        case EFFET_BOOST_ATTAQUE:
+                            printf("Att+");
+                            break;
+                        case EFFET_BOOST_DEFENSE:
+                            printf("Def+");
+                            break;
+                        case EFFET_BRULURE:
+                            printf("Brûlure");
+                            break;
+                        default:
+                            break;
+                    }
+                    if (k < combat->participants[j].nb_effets - 1) printf(", ");
+                }
+                printf("]");
+            }
+        }
         printf("\n");
     }
     
@@ -375,6 +487,36 @@ void afficher_statuts_combat(Combat* combat) {
         Combattant* c = &combat->equipe2->members[i];
         printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max);
         if (est_ko(c)) printf(" (KO)");
+        
+        // Afficher les effets actifs
+        for (int j = 0; j < combat->nombre_participants; j++) {
+            if (combat->participants[j].combattant == c && combat->participants[j].nb_effets > 0) {
+                printf(" [");
+                for (int k = 0; k < combat->participants[j].nb_effets; k++) {
+                    switch (combat->participants[j].effets[k].type) {
+                        case EFFET_POISON:
+                            printf("Poison");
+                            break;
+                        case EFFET_ETOURDISSEMENT:
+                            printf("Étourdi");
+                            break;
+                        case EFFET_BOOST_ATTAQUE:
+                            printf("Att+");
+                            break;
+                        case EFFET_BOOST_DEFENSE:
+                            printf("Def+");
+                            break;
+                        case EFFET_BRULURE:
+                            printf("Brûlure");
+                            break;
+                        default:
+                            break;
+                    }
+                    if (k < combat->participants[j].nb_effets - 1) printf(", ");
+                }
+                printf("]");
+            }
+        }
         printf("\n");
     }
     printf("\n");
@@ -404,7 +546,36 @@ int choisir_cible(Combat* combat, TypeJoueur controleur) {
     for (int i = 0; i < combat->nombre_participants; i++) {
         EtatCombattant* c = &combat->participants[i];
         if (!est_ko(c->combattant) && c->controleur != controleur) {
-            printf("%d. %s (%.0f PV)\n", index+1, c->combattant->nom, c->combattant->Vie.courrante);
+            printf("%d. %s (%.0f PV)", index+1, c->combattant->nom, c->combattant->Vie.courrante);
+            
+            // Afficher les effets actifs sur la cible
+            if (c->nb_effets > 0) {
+                printf(" [");
+                for (int j = 0; j < c->nb_effets; j++) {
+                    switch (c->effets[j].type) {
+                        case EFFET_POISON:
+                            printf("Poison");
+                            break;
+                        case EFFET_ETOURDISSEMENT:
+                            printf("Étourdi");
+                            break;
+                        case EFFET_BOOST_ATTAQUE:
+                            printf("Att+");
+                            break;
+                        case EFFET_BOOST_DEFENSE:
+                            printf("Def+");
+                            break;
+                        case EFFET_BRULURE:
+                            printf("Brûlure");
+                            break;
+                        default:
+                            break;
+                    }
+                    if (j < c->nb_effets - 1) printf(", ");
+                }
+                printf("]");
+            }
+            printf("\n");
             index++;
         }
     }
