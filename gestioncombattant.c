@@ -33,6 +33,7 @@ void detruire_combattant(Combattant *combattant)
     {
         free(combattant->techniques[i].nom);
         free(combattant->techniques[i].description);
+        free(combattant->techniques[i].nom_effet);
     }
     free(combattant);
 }
