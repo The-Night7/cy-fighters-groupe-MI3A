@@ -75,7 +75,7 @@ Combattant *creer_combattant(const char *nom)
                        0, 0, 1, "Boost dégats", 2);
     }
 
-    if (strcmp(nom, "Freettle") == 0)
+    else if (strcmp(nom, "Freettle") == 0)
     {
 
         combattant->Vie.courrante = combattant->Vie.max = 200;

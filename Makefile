@@ -36,3 +36,4 @@ $(EAU_EXEC) : $(EAU_SRC)
 clean:
 	@echo "🧹 Nettoyage..."
 	@rm -f $(EXEC)
+	@rm -f $(EAU_EXEC)
