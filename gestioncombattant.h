@@ -12,10 +12,12 @@
 typedef struct {
     char *nom;
     char *description;
-    char *cible;
+    char *cible;      // Description textuelle de la cible
+    int ncible;       // Correction: renommer en ncible pour éviter la duplication
     float puissance;
     int nb_tour_recharge;
     bool activable;
+    int type;
     struct{
         bool possede;
         char *nom;
@@ -46,7 +48,7 @@ typedef struct {
 Combattant *creer_combattant(const char *name);
 void detruire_combattant(Combattant *Combattant);
 
-void init_technique(Technique *tech, const char *name, const char *description, const char *cible,
-    float puissance, int nb_tour_recharge, bool possede, const char *nom_effet, int nb_tour_actifs);
+void init_technique(Technique *tech, const char *name, const char *description, const char *cible, int ncible,
+    float puissance, int nb_tour_recharge, bool possede, const char *nom_effet, int nb_tour_actifs, int type);
 
 #endif
