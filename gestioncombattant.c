@@ -12,16 +12,20 @@ void init_technique(Technique *tech, const char *nom, const char *description, c
     tech->nom = strdup(nom);
     tech->description = strdup(description);
     tech->puissance = puissance;
-    tech->cible = strdup(cible);
+    tech->cible = strdup(cible);        // Copie de la chaîne de caractères
     tech->nb_tour_recharge = nb_tour_recharge;
     tech->activable = true;
-    tech->cible = cible;
+    tech->ncible = ncible;              // Correction: utiliser ncible au lieu de réassigner cible
     tech->Effet.possede = possede;
     tech->type = type;
     if (possede)
     {
         tech->Effet.nom = strdup(nom_effet);
         tech->Effet.nb_tour_actifs = nb_tour_actifs;
+    }
+    else
+    {
+        tech->Effet.nom = NULL;         // Initialiser à NULL pour éviter des problèmes lors de la libération
     }
     return;
 }
@@ -38,7 +42,9 @@ void detruire_combattant(Combattant *combattant)
     {
         free(combattant->techniques[i].nom);
         free(combattant->techniques[i].description);
-        free(combattant->techniques[i].Effet.nom);
+        free(combattant->techniques[i].cible);   
+        if (combattant->techniques[i].Effet.possede)
+            free(combattant->techniques[i].Effet.nom);
     }
     free(combattant);
 }
