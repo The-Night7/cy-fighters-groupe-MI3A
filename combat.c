@@ -249,7 +249,7 @@ void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattan
 
     // Cas d'une technique de soin (puissance <= 0)
     if (tech->puissance <= 0) { // Si c'est une technique de soin
-        float soin = -tech->puissance * attaquant->combattant->attaque; // exemple : puissance -0.3 soigne 30% de l'attaque
+        float soin = -tech->puissance * attaquant->combattant->Vie.max; // exemple : puissance 0.3 soigne 30% de la vie
         cible->combattant->Vie.courrante += soin; // Ajoute le soin aux points de vie de la cible
         // On ne dépasse pas le maximum de vie
         if (cible->combattant->Vie.courrante > cible->combattant->Vie.max) // Si les PV dépassent le maximum

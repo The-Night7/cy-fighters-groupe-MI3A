@@ -78,12 +78,12 @@ Combattant *creer_combattant(const char *nom)
         init_technique(&combattant->techniques[1], "Reconstitution",
                        "Restaure quelques points de vie à chaque tour pour tous les alliés pendant 2 tours. Doit se recharger.",
                        "Plusieurs alliés", 2,
-                       0, 4, 1, "Reconstitution", 3, 2);
+                       -0.1, 4, 1, "Reconstitution", 3, 2); // puissance = taux de guérison -> négatif car si puissance <=0 alors soin.
 
         init_technique(&combattant->techniques[2], "Eau énergisante",
                        "Restaure 20 % de vie. S'applique un boost de dégats pendant 2 tours",
                        "Un allié", 1,
-                       0, 0, 1, "Boost dégats", 2, 5);
+                       -0.2, 0, 1, "Boost dégats", 2, 5);
     }
 
     else if (strcmp(nom, "Freettle") == 0)
