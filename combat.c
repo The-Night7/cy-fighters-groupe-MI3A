@@ -86,29 +86,78 @@ void gerer_tour_combat(Combat* combat) {
                 int choix;
                 scanf("%d", &choix);
                 
-                // Trouver une cible valide
-                int cible_index = choisir_cible(combat, combat->participants[i].controleur);
-                EtatCombattant* cible = NULL;
-                
-                // Trouver la cible correspondante dans participants[]
-                for (int j = 0, count = 0; j < combat->nombre_participants; j++) {
-                    if (!est_ko(combat->participants[j].combattant) && 
-                        combat->participants[j].controleur != combat->participants[i].controleur) {
-                        if (count == cible_index) {
-                            cible = &combat->participants[j];
-                            break;
-                        }
-                        count++;
-                    }
+                // Déterminer quelle technique est utilisée (ou attaque de base)
+                int tech_index = -1;
+                if (choix >= 2 && choix <= MAX_TECHNIQUES+1) {
+                    tech_index = choix-2;
                 }
                 
-                if (choix == 1) {
-                    attaque_base(&combat->participants[i], cible);
-                } else if (choix >= 2 && choix <= MAX_TECHNIQUES+1) {
-                    utiliser_technique(&combat->participants[i], choix-2, cible);
+                // Trouver une cible valide selon le type de technique
+                int cible_index = choisir_cible(combat, combat->participants[i].controleur, tech_index, &combat->participants[i]);
+                
+                // Traiter les cas spéciaux
+                if (cible_index == -1) {
+                    printf("Action annulée, aucune cible valide.\n");
+                    continue; // Passer au combattant suivant
+                } 
+                else if (cible_index == -2) {
+                    // Cibles multiples - appliquer à toutes les cibles valides
+                    if (choix == 1) {
+                        printf("L'attaque de base ne peut pas cibler plusieurs ennemis.\n");
+                    } else {
+                        // Pour chaque cible valide
+                        for (int j = 0; j < combat->nombre_participants; j++) {
+                            bool est_allie = (combat->participants[j].controleur == combat->participants[i].controleur);
+                            bool vise_allie = (combat->participants[i].combattant->techniques[tech_index].type == 2 || 
+                                              combat->participants[i].combattant->techniques[tech_index].type == 3 ||
+                                              combat->participants[i].combattant->techniques[tech_index].type == 5);
+                                              
+                            if (!est_ko(combat->participants[j].combattant) && est_allie == vise_allie) {
+                                utiliser_technique(&combat->participants[i], tech_index, &combat->participants[j]);
+                            }
+                        }
+                    }
+                }
+                else if (cible_index == -3) {
+                    // Ciblage de soi-même
+                    utiliser_technique(&combat->participants[i], tech_index, &combat->participants[i]);
+                }
+                else {
+                    // Ciblage normal d'une cible unique
+                    EtatCombattant* cible = NULL;
+                    
+                    // Trouver la cible correspondante dans participants[]
+                    bool vise_allie = (tech_index >= 0 && (combat->participants[i].combattant->techniques[tech_index].type == 2 || 
+                                       combat->participants[i].combattant->techniques[tech_index].type == 3 ||
+                                       combat->participants[i].combattant->techniques[tech_index].type == 5));
+                                       
+                    for (int j = 0, count = 0; j < combat->nombre_participants; j++) {
+                        bool est_allie = (combat->participants[j].controleur == combat->participants[i].controleur);
+                        
+                        if (!est_ko(combat->participants[j].combattant) && 
+                            est_allie == vise_allie && 
+                            &combat->participants[j] != &combat->participants[i]) {
+                            if (count == cible_index) {
+                                cible = &combat->participants[j];
+                                break;
+                            }
+                            count++;
+                        }
+                    }
+                    
+                    if (cible) {
+                        if (choix == 1) {
+                            attaque_base(&combat->participants[i], cible);
+                        } else if (choix >= 2 && choix <= MAX_TECHNIQUES+1) {
+                            utiliser_technique(&combat->participants[i], tech_index, cible);
+                        }
+                    } else {
+                        printf("Cible invalide.\n");
+                    }
                 }
             } else {
                 // Tour de l'IA (comportement simple)
+                // ... [code existant pour l'IA]
                 for (int j = 0; j < combat->nombre_participants; j++) {
                     if (!est_ko(combat->participants[j].combattant) && 
                         combat->participants[j].controleur != combat->participants[i].controleur) {
@@ -132,7 +181,6 @@ void gerer_tour_combat(Combat* combat) {
             // Réinitialise la jauge de tour après l'action
             combat->participants[i].turn_meter = 0;
         }
-        
     }
 }
 
@@ -538,15 +586,56 @@ void afficher_menu_actions(EtatCombattant* joueur) {
     }
 }
 
-// Permet de choisir une cible
-int choisir_cible(Combat* combat, TypeJoueur controleur) {
+// Permet de choisir une cible en fonction du type de technique et de ses cibles
+int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant) {
+    // Si tech_index est -1, c'est une attaque de base (vise toujours un ennemi unique)
+    bool vise_allie = false;
+    bool cibles_multiples = false;
+    
+    if (tech_index >= 0 && tech_index < MAX_TECHNIQUES) {
+        Technique* tech = &attaquant->combattant->techniques[tech_index];
+        
+        // Déterminer si la technique vise un allié ou un ennemi
+        switch (tech->type) {
+            case 1: // dégâts
+            case 4: // brûlure
+                vise_allie = false;
+                break;
+            case 2: // soin
+            case 3: // bouclier
+            case 5: // autre effet positif
+                vise_allie = true;
+                break;
+            default:
+                vise_allie = false;
+        }
+        
+        // Déterminer si la technique vise une ou plusieurs cibles
+        cibles_multiples = (tech->ncible == 2);
+    }
+    
+    // Si la technique vise plusieurs cibles, pas besoin de choisir
+    if (cibles_multiples) {
+        printf("\nLa technique cible toutes les %s!\n", vise_allie ? "alliés" : "ennemis");
+        return -2; // Code spécial pour indiquer que toutes les cibles sont sélectionnées
+    }
+    
     printf("\nChoisissez une cible:\n");
     int index = 0;
     
+    // Pour les techniques qui visent des alliés, inclure le lanceur lui-même comme option
+    if (vise_allie) {
+        printf("0. %s (soi-même) (%.0f PV)\n", attaquant->combattant->nom, attaquant->combattant->Vie.courrante);
+        index = 1;
+    }
+    
     for (int i = 0; i < combat->nombre_participants; i++) {
         EtatCombattant* c = &combat->participants[i];
-        if (!est_ko(c->combattant) && c->controleur != controleur) {
-            printf("%d. %s (%.0f PV)", index+1, c->combattant->nom, c->combattant->Vie.courrante);
+        
+        // Filtrer les cibles selon qu'on vise un allié ou un ennemi
+        bool est_allie = (c->controleur == controleur);
+        if (!est_ko(c->combattant) && (est_allie == vise_allie) && c != attaquant) {
+            printf("%d. %s (%.0f PV)", index, c->combattant->nom, c->combattant->Vie.courrante);
             
             // Afficher les effets actifs sur la cible
             if (c->nb_effets > 0) {
@@ -580,7 +669,24 @@ int choisir_cible(Combat* combat, TypeJoueur controleur) {
         }
     }
     
+    // Si aucune cible valide n'est trouvée
+    if (index == 0 || (vise_allie && index == 1 && attaquant->combattant->Vie.courrante <= 0)) {
+        printf("Aucune cible valide disponible!\n");
+        return -1;
+    }
+    
     int choix;
     scanf("%d", &choix);
-    return choix-1; // Retourne l'index dans la liste des cibles valides
+    
+    // Si on vise soi-même
+    if (vise_allie && choix == 0) {
+        return -3; // Code spécial pour indiquer "soi-même"
+    }
+    
+    // Ajuster l'index si on vise des alliés (car on a ajouté l'option "soi-même")
+    if (vise_allie) {
+        choix--;
+    }
+    
+    return choix; // Retourne l'index dans la liste des cibles valides
 }

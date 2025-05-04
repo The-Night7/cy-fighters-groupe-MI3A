@@ -59,6 +59,6 @@ void retirer_effet(EtatCombattant* cs, TypeEffet type);
 void afficher_combat(const Combat* combat);
 void afficher_statuts_combat(Combat* combat); // Modifié pour correspondre à l'implémentation
 void afficher_menu_actions(EtatCombattant* joueur); // Ajout de la déclaration manquante
-int choisir_cible(Combat* combat, TypeJoueur controleur); // Ajout de la déclaration manquante
+int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant); // Permet de choisir une cible en fonction du type de technique et de ses cibles
 
 #endif
