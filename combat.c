@@ -54,160 +54,118 @@ void initialiser_combat(Combat* combat, Equipe* eq1, Equipe* eq2) {
 
 // Gère le déroulement d'un tour de combat (mise à jour des jauges, actions, etc.)
 void gerer_tour_combat(Combat* combat) {
-    combat->tour++; // Incrémentation du compteur de tours
-    // Décrémenter les cooldowns de toutes les techniques pour chaque combattant
-    for (int i = 0; i < combat->nombre_participants; i++) { // Parcours de tous les participants
-        for (int j = 0; j < MAX_TECHNIQUES; j++) { // Parcours de toutes les techniques
-            if (combat->participants[i].cooldowns[j] > 0) // Si le cooldown est actif
-                combat->participants[i].cooldowns[j]--; // Décrémenter le cooldown
+    combat->tour++; // Incrémente le compteur de tours
+    printf("\n=== DÉBUT DU TOUR %d ===\n", combat->tour); // Affiche le numéro du tour
+    
+    // Appliquer les effets en cours (poison, brûlure, etc.)
+    appliquer_effets(combat);
+    
+    // Vérifier si une équipe a gagné après les effets
+    if (verifier_victoire(combat)) {
+        return;
+    }
+    
+    // Mise à jour des jauges de tour pour tous les combattants
+    for (int i = 0; i < combat->nombre_participants; i++) {
+        EtatCombattant* cs = &combat->participants[i];
+        if (!est_ko(cs->combattant)) {
+            cs->turn_meter += cs->combattant->speed; // Augmente la jauge de tour
         }
     }
-
-
-    // Application des effets de statut (buffs/debuffs)
-    appliquer_effets(combat); // Appel à la fonction qui applique tous les effets actifs
-    // Parcours de tous les participants pour gérer leur tour
-    for (int i = 0; i < combat->nombre_participants; i++) { // Parcours de tous les participants
-        if (est_ko(combat->participants[i].combattant)) continue; // Passe au suivant si le combattant est KO
-
-        // Incrémentation de la jauge de tour selon la vitesse
-        combat->participants[i].turn_meter += combat->participants[i].combattant->speed; // Augmente la jauge de tour
-        if (combat->participants[i].turn_meter >= 100.0f) { // Si la jauge atteint 100%
-            afficher_statuts_combat(combat); // Affiche l'état actuel du combat
-            printf("%s peut agir!\n", combat->participants[i].combattant->nom); // Annonce que le combattant peut agir
+    
+    // Traiter les actions des combattants dont la jauge est pleine
+    bool action_effectuee = false;
+    do {
+        action_effectuee = false;
+        
+        // Trouver le combattant avec la jauge la plus élevée
+        int index_max = -1;
+        float tm_max = 0;
+        
+        for (int i = 0; i < combat->nombre_participants; i++) {
+            EtatCombattant* cs = &combat->participants[i];
+            if (!est_ko(cs->combattant) && cs->turn_meter >= 100 && cs->turn_meter > tm_max) {
+                index_max = i;
+                tm_max = cs->turn_meter;
+            }
+        }
+        
+        // Si un combattant peut agir
+        if (index_max != -1) {
+            EtatCombattant* acteur = &combat->participants[index_max];
+            acteur->turn_meter -= 100; // Réinitialise la jauge (maintient l'excès)
             
-            if (combat->participants[i].controleur == JOUEUR) { // Si c'est un combattant contrôlé par le joueur
-                // Tour du joueur
-                int choix = -1; // Variable pour stocker le choix du joueur
-                int tech_index = -1; // Initialisation de l'indice de technique à -1 (attaque de base)
-                int cible_index = -1; // Initialisation de l'indice de cible
-                bool action_valide = false; // Pour vérifier si l'action est valide
-                
-                while (!action_valide) {
-                    afficher_menu_actions(&combat->participants[i]); // Affiche le menu d'actions
-                    scanf("%d", &choix); // Lecture du choix
+            // Vérifier si le combattant est étourdi
+            bool est_etourdi = false;
+            for (int j = 0; j < acteur->nb_effets; j++) {
+                if (acteur->effets[j].type == EFFET_ETOURDISSEMENT) {
+                    est_etourdi = true;
+                    printf("%s est étourdi et passe son tour!\n", acteur->combattant->nom);
+                    break;
+                }
+            }
+            
+            if (!est_etourdi) {
+                // Gérer l'action selon le type de contrôleur
+                if (acteur->controleur == JOUEUR) {
+                    // Tour du joueur humain
+                    afficher_statuts_combat(combat);
+                    printf("\nC'est au tour de %s (joueur) d'agir!\n", acteur->combattant->nom);
+                    gerer_tour_joueur(combat, acteur);
+                } else {
+                    // Tour de l'IA
+                    printf("\nC'est au tour de %s (IA) d'agir!\n", acteur->combattant->nom);
+                    // Logique simple pour l'IA: attaque de base sur un ennemi aléatoire
                     
-                    // Déterminer quelle technique est utilisée (ou attaque de base)
-                    if (choix == 1) {
-                        tech_index = -1; // Attaque de base
-                    } else if (choix >= 2 && choix <= MAX_TECHNIQUES+1) {
-                        tech_index = choix-2; // Calcul de l'indice de la technique
+                    // Trouver les cibles valides
+                    int nb_cibles = 0;
+                    for (int i = 0; i < combat->nombre_participants; i++) {
+                        EtatCombattant* c = &combat->participants[i];
+                        if (!est_ko(c->combattant) && c->controleur != acteur->controleur) {
+                            nb_cibles++;
+                        }
+                    }
+                    
+                    if (nb_cibles > 0) {
+                        int cible_aleatoire = rand() % nb_cibles;
+                        int index_cible = 0;
                         
-                        // Vérifier si la technique est valide
-                        if (tech_index >= 0 && tech_index < MAX_TECHNIQUES) {
-                            Technique* tech = &combat->participants[i].combattant->techniques[tech_index];
-                            if (!tech->activable) {
-                                printf("La technique %s n'est pas activable. Choisissez une autre action.\n", tech->nom);
-                                continue; // Redemander une action
-                            }
-                            if (combat->participants[i].cooldowns[tech_index] > 0) {
-                                printf("La technique %s n'est pas encore disponible (recharge : %d tours). Choisissez une autre action.\n", 
-                                      tech->nom, combat->participants[i].cooldowns[tech_index]);
-                                continue; // Redemander une action
-                            }
-                        } else {
-                            printf("Technique invalide. Choisissez une action valide.\n");
-                            continue; // Redemander une action
-}
-                    } else {
-                        printf("Choix invalide. Choisissez une action valide.\n");
-                        continue; // Redemander une action
-                    }
-                    
-                    // Trouver une cible valide selon le type de technique
-                    cible_index = choisir_cible(combat, combat->participants[i].controleur, tech_index, &combat->participants[i]);
-                    
-                    // Traiter les cas spéciaux
-                    if (cible_index == -1) {
-                        printf("Action annulée, aucune cible valide. Choisissez une autre action.\n");
-                        continue; // Redemander une action
-                    } else {
-                        // L'action est valide
-                        action_valide = true;
-                    }
-                }
-                
-                // Exécuter l'action choisie
-                if (cible_index == -2) { // Si cibles multiples
-                    // Cibles multiples - appliquer à toutes les cibles valides
-                    if (choix == 1) { // Si attaque de base
-                        printf("L'attaque de base ne peut pas cibler plusieurs ennemis.\n"); // Message d'erreur
-                    } else { // Si technique spéciale
-                        // Pour chaque cible valide
-                        for (int j = 0; j < combat->nombre_participants; j++) { // Parcours de tous les participants
-                            bool est_allie = (combat->participants[j].controleur == combat->participants[i].controleur); // Vérifie si c'est un allié
-                            bool vise_allie = (combat->participants[i].combattant->techniques[tech_index].type == 2 || 
-                                              combat->participants[i].combattant->techniques[tech_index].type == 3 ||
-                                              combat->participants[i].combattant->techniques[tech_index].type == 5); // Vérifie si la technique vise les alliés
-                                              
-                            if (!est_ko(combat->participants[j].combattant) && est_allie == vise_allie) { // Si la cible est valide
-                                utiliser_technique(&combat->participants[i], tech_index, &combat->participants[j]); // Utilise la technique sur la cible
-                            }
-                        }
-                    }
-                }
-                else if (cible_index == -3) { // Si ciblage de soi-même
-                    // Ciblage de soi-même
-                    utiliser_technique(&combat->participants[i], tech_index, &combat->participants[i]); // Utilise la technique sur soi-même
-                }
-                else { // Si ciblage normal
-                    // Ciblage normal d'une cible unique
-                    EtatCombattant* cible = NULL; // Initialisation du pointeur de cible
-                    
-                    // Trouver la cible correspondante dans participants[]
-                    bool vise_allie = (tech_index >= 0 && (combat->participants[i].combattant->techniques[tech_index].type == 2 || 
-                                       combat->participants[i].combattant->techniques[tech_index].type == 3 ||
-                                       combat->participants[i].combattant->techniques[tech_index].type == 5)); // Vérifie si la technique vise les alliés
-                                       
-                    for (int j = 0, count = 0; j < combat->nombre_participants; j++) { // Parcours de tous les participants
-                        bool est_allie = (combat->participants[j].controleur == combat->participants[i].controleur); // Vérifie si c'est un allié
-                        
-                        if (!est_ko(combat->participants[j].combattant) && 
-                            est_allie == vise_allie && 
-                            &combat->participants[j] != &combat->participants[i]) { // Si la cible est valide
-                            if (count == cible_index) { // Si c'est la cible choisie
-                                cible = &combat->participants[j]; // Assigne la cible
-                                break; // Sort de la boucle
-                            }
-                            count++; // Incrémente le compteur
-                        }
-                    }
-                    
-                    if (cible) { // Si une cible a été trouvée
-                        if (choix == 1) { // Si attaque de base
-                            attaque_base(&combat->participants[i], cible); // Effectue l'attaque de base
-                        } else if (choix >= 2 && choix <= MAX_TECHNIQUES+1) { // Si technique spéciale
-                            utiliser_technique(&combat->participants[i], tech_index, cible); // Utilise la technique
-                        }
-                    }
-                }
-            } else { // Si c'est un combattant contrôlé par l'IA
-                // Tour de l'IA (comportement simple)
-                // ... [code existant pour l'IA]
-                for (int j = 0; j < combat->nombre_participants; j++) { // Parcours de tous les participants
-                    if (!est_ko(combat->participants[j].combattant) && 
-                        combat->participants[j].controleur != combat->participants[i].controleur) { // Si c'est un ennemi non KO
-                        // L'IA utilise aléatoirement une attaque de base ou une technique
-                        if (rand() % 2 == 0) { // 50% de chance d'utiliser l'attaque de base
-                            attaque_base(&combat->participants[i], &combat->participants[j]); // Effectue l'attaque de base
-                        } else { // 50% de chance d'utiliser une technique
-                            // Choisir une technique aléatoire disponible
-                            for (int k = 0; k < MAX_TECHNIQUES; k++) { // Parcours de toutes les techniques
-                                if (combat->participants[i].cooldowns[k] == 0 && 
-                                    combat->participants[i].combattant->techniques[k].activable) { // Si la technique est disponible
-                                    utiliser_technique(&combat->participants[i], k, &combat->participants[j]); // Utilise la technique
-                                    break; // Sort de la boucle
+                        for (int i = 0; i < combat->nombre_participants; i++) {
+                            EtatCombattant* c = &combat->participants[i];
+                            if (!est_ko(c->combattant) && c->controleur != acteur->controleur) {
+                                if (index_cible == cible_aleatoire) {
+                                    attaque_base(acteur, c);
+                                    break;
                                 }
+                                index_cible++;
                             }
                         }
-                        break; // Sort de la boucle après avoir attaqué un ennemi
                     }
                 }
             }
-            // Réinitialise la jauge de tour après l'action
-            combat->participants[i].turn_meter = 0; // Remet la jauge à 0
+            
+            action_effectuee = true;
+            
+            // Vérifier si une équipe a gagné après cette action
+            if (verifier_victoire(combat)) {
+                return;
+            }
+        }
+    } while (action_effectuee);
+    
+    // Réduire les cooldowns à la fin du tour
+    for (int i = 0; i < combat->nombre_participants; i++) {
+        EtatCombattant* cs = &combat->participants[i];
+        if (!est_ko(cs->combattant)) {
+            for (int j = 0; j < MAX_TECHNIQUES; j++) {
+                if (cs->cooldowns[j] > 0) {
+                    cs->cooldowns[j]--;
+                }
+            }
         }
     }
+    
+    printf("\n=== FIN DU TOUR %d ===\n", combat->tour);
 }
 
 // Effectue une attaque de base d'un combattant sur une cible
@@ -219,7 +177,8 @@ void attaque_base(EtatCombattant* attaquant, EtatCombattant* cible) {
            cible->combattant->nom, // Nom de la cible
            degats); // Dégâts infligés
 }
-/*  */
+
+
 void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattant* cible) {
     /**
     * Utilise une technique spéciale d'un combattant sur une cible.
@@ -247,47 +206,99 @@ void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattan
         return; // Sortie de la fonction
     }
 
-    // Cas d'une technique de soin (puissance <= 0)
-    if (tech->puissance <= 0) { // Si c'est une technique de soin
-        float soin = -tech->puissance * attaquant->combattant->Vie.max; // exemple : puissance 0.3 soigne 30% de la vie
-        cible->combattant->Vie.courrante += soin; // Ajoute le soin aux points de vie de la cible
-        // On ne dépasse pas le maximum de vie
-        if (cible->combattant->Vie.courrante > cible->combattant->Vie.max) // Si les PV dépassent le maximum
-            cible->combattant->Vie.courrante = cible->combattant->Vie.max; // Limite les PV au maximum
-        printf("%s soigne %s de %.1f points de vie !\n", attaquant->combattant->nom, cible->combattant->nom, soin); // Message de soin
-    } else { // Si c'est une technique offensive
-        // Cas d'une attaque spéciale
-        float degats = attaquant->combattant->attaque * tech->puissance - cible->combattant->defense * 0.2f; // Calcul des dégâts
-        if (degats < 0) degats = 0; // Minimum 0 dégâts
+    // Message d'utilisation de la technique
+    printf("\n%s utilise %s", attaquant->combattant->nom, tech->nom);
+    if (attaquant != cible) {
+        printf(" sur %s", cible->combattant->nom);
+    }
+    printf(" !\n");
 
-        // Gestion de l'esquive (similaire à attaque_base)
-        float chance_esquive = cible->combattant->agility * 0.01f; // Calcul de la chance d'esquive
-        if ((rand() % 100) < (chance_esquive * 100)) { // Test d'esquive
-            printf("%s esquive la technique spéciale %s !\n", cible->combattant->nom, tech->nom); // Message d'esquive
-            degats = 0; // Pas de dégâts si esquive
-        } else { // Si l'attaque touche
-            cible->combattant->Vie.courrante -= degats; // Soustrait les dégâts des points de vie
-            printf("%s utilise %s sur %s et inflige %.1f dégâts !\n", attaquant->combattant->nom, tech->nom, cible->combattant->nom, degats); // Message d'attaque
+    // Traitement selon le type de technique
+    switch(tech->type) {
+        case 1: // Dégâts
+            {
+                float degats = attaquant->combattant->attaque * tech->puissance - cible->combattant->defense * 0.2f;
+                if (degats < 0) degats = 0;
+                
+                // Gestion de l'esquive
+                float chance_esquive = cible->combattant->agility * 0.01f;
+                if ((rand() % 100) < (chance_esquive * 100)) {
+                    printf("%s esquive l'attaque !\n", cible->combattant->nom);
+                } else {
+                    cible->combattant->Vie.courrante -= degats;
+                    printf("L'attaque inflige %.1f points de dégâts !\n", degats);
+                }
+            }
+            break;
+            
+        case 2: // Soin
+            {
+                float soin = -tech->puissance * attaquant->combattant->Vie.max;
+                cible->combattant->Vie.courrante += soin;
+                if (cible->combattant->Vie.courrante > cible->combattant->Vie.max)
+                    cible->combattant->Vie.courrante = cible->combattant->Vie.max;
+                printf("Le soin restaure %.1f points de vie !\n", soin);
+            }
+            break;
+            
+        case 3: // Bouclier
+            printf("Un bouclier protecteur entoure %s !\n", cible->combattant->nom);
+            break;
+            
+        case 4: // Brûlure
+            printf("Des flammes commencent à consumer %s !\n", cible->combattant->nom);
+            break;
+            
+        case 5: // Boost
+            {
+                float soin = -tech->puissance * attaquant->combattant->Vie.max;
+                cible->combattant->Vie.courrante += soin;
+                if (cible->combattant->Vie.courrante > cible->combattant->Vie.max)
+                    cible->combattant->Vie.courrante = cible->combattant->Vie.max;
+                printf("Le boost restaure %.1f points de vie", soin);
+                
+                if (tech->Effet.possede) {
+                    printf(" et augmente les capacités !");
+                }
+                printf(" !\n");
+            }
+            break;
+            
+        default:
+            break;
+    }
+
+    // Application d'un effet spécial si la technique en possède un
+    if (tech->Effet.possede) {
+        // Si l'effet est de type brûlure, l'appliquer
+        if (strcmp(tech->Effet.nom, "Brûlure") == 0) {
+            appliquer_effet(cible, EFFET_BRULURE, tech->Effet.nb_tour_actifs, attaquant->combattant->attaque * 0.15f);
+            printf("%s sera affecté par la brûlure pendant %d tours !\n", 
+                   cible->combattant->nom, tech->Effet.nb_tour_actifs);
         }
-
-        // Application d'un effet spécial si la technique en possède un
-        if (tech->Effet.possede) { // Si la technique a un effet
-            // Si l'effet est de type brûlure, l'appliquer
-            if (strcmp(tech->Effet.nom, "Brûlure") == 0) { // Si c'est une brûlure
-                appliquer_effet(cible, EFFET_BRULURE, tech->Effet.nb_tour_actifs, attaquant->combattant->attaque * 0.15f); // Applique l'effet de brûlure
-                printf("%s enflamme %s pour %d tours!\n", 
-                       attaquant->combattant->nom, cible->combattant->nom, tech->Effet.nb_tour_actifs); // Message d'effet
-            }
-            // Autres effets existants...
-            else { // Si c'est un autre effet
-                printf("%s applique l'effet spécial '%s' à %s pour %d tours !\n",
-                       attaquant->combattant->nom, tech->Effet.nom, cible->combattant->nom, tech->Effet.nb_tour_actifs); // Message d'effet
-            }
+        else if (strcmp(tech->Effet.nom, "Boost dégats") == 0) {
+            appliquer_effet(cible, EFFET_BOOST_ATTAQUE, tech->Effet.nb_tour_actifs, 0.3f); // 30% boost d'attaque
+            printf("%s bénéficie d'un boost d'attaque de 30%% pendant %d tours !\n", 
+                   cible->combattant->nom, tech->Effet.nb_tour_actifs);
+        }
+        else if (strcmp(tech->Effet.nom, "Bouclier Moyen") == 0) {
+            appliquer_effet(cible, EFFET_BOOST_DEFENSE, tech->Effet.nb_tour_actifs, 0.5f); // 50% boost de défense
+            printf("%s bénéficie d'un boost de défense de 50%% pendant %d tours !\n", 
+                   cible->combattant->nom, tech->Effet.nb_tour_actifs);
+        }
+        else if (strcmp(tech->Effet.nom, "Reconstitution") == 0) {
+            // Effet de soin sur la durée déjà géré par la fonction appliquer_effets
+            printf("%s sera soigné progressivement pendant %d tours !\n", 
+                   cible->combattant->nom, tech->Effet.nb_tour_actifs);
+        }
+        else {
+            printf("%s applique l'effet spécial '%s' à %s pour %d tours !\n",
+                   attaquant->combattant->nom, tech->Effet.nom, cible->combattant->nom, tech->Effet.nb_tour_actifs);
         }
     }
 
     // Mise à jour du cooldown de la technique
-    attaquant->cooldowns[tech_index] = tech->nb_tour_recharge; // Définit le cooldown
+    attaquant->cooldowns[tech_index] = tech->nb_tour_recharge;
 }
 
 // Vérifie si une équipe a gagné (si l'autre équipe n'a plus de combattants vivants)
@@ -603,8 +614,49 @@ void afficher_menu_actions(EtatCombattant* joueur) {
         Technique* tech = &joueur->combattant->techniques[i]; // Récupère la technique
         if (tech->activable && joueur->cooldowns[i] == 0) { // Si la technique est disponible
             printf("%d. %s", i+2, tech->nom); // Affiche l'option de technique
-            if (tech->puissance <= 0) printf(" (Soin)"); // Indique si c'est un soin
+            
+            // Afficher le type de technique
+            switch(tech->type) {
+                case 1:
+                    printf(" (Dégâts");
+                    if (tech->puissance > 0)
+                        printf(" %.0f%%", tech->puissance * 100);
+                    printf(")");
+                    break;
+                case 2:
+                    printf(" (Soin");
+                    if (tech->puissance < 0)
+                        printf(" %.0f%%", -tech->puissance * 100);
+                    printf(")");
+                    break;
+                case 3:
+                    printf(" (Bouclier)");
+                    break;
+                case 4:
+                    printf(" (Brûlure)");
+                    break;
+                case 5:
+                    printf(" (Boost)");
+                    break;
+                default:
+                    break;
+            }
+            
+            // Afficher la cible
+            printf(" - Cible: %s", tech->cible);
+            
+            // Afficher l'effet si présent
+            if (tech->Effet.possede) {
+                printf(" - Effet: %s (%d tours)", 
+                       tech->Effet.nom, 
+                       tech->Effet.nb_tour_actifs);
+            }
+            
             printf("\n"); // Nouvelle ligne
+        } else if (tech->activable && joueur->cooldowns[i] > 0) {
+            // Afficher aussi les techniques en cooldown mais de façon différente
+            printf("  %s (en recharge: %d tours)\n", 
+                   tech->nom, joueur->cooldowns[i]);
         }
     }
 }
@@ -620,17 +672,16 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
         
         // Déterminer si la technique vise un allié ou un ennemi
         switch (tech->type) { // Selon le type de technique
-            case 1: // dégâts
-            case 4: // brûlure
-                vise_allie = false; // Vise un ennemi
-                break;
             case 2: // soin
             case 3: // bouclier
-            case 5: // autre effet positif
-                vise_allie = true; // Vise un allié
+            case 5: // boost (comme dans la technique "Eau énergisante")
+                vise_allie = true;
                 break;
+            case 1: // dégâts
+            case 4: // brûlure
             default: // Autre type
                 vise_allie = false; // Par défaut, vise un ennemi
+                break;
         }
         
         // Déterminer si la technique vise une ou plusieurs cibles
@@ -716,7 +767,20 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
             }
         }
         
-        scanf("%d", &choix); // Lecture du choix
+        // Lecture sécurisée de l'entrée utilisateur
+        char buffer[32];
+        int result;
+        
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            printf("Erreur de lecture. Veuillez réessayer.\n");
+            continue;
+        }
+        
+        // Vérifier si l'entrée est un nombre valide
+        if (sscanf(buffer, "%d", &choix) != 1) {
+            printf("Entrée invalide. Veuillez entrer un nombre.\n");
+            continue;
+        }
         
         // Si on vise soi-même
         if (vise_allie && choix == 0) { // Si on se cible soi-même
@@ -733,7 +797,7 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
         if (choix >= 0 && choix <= max_index) {
             choix_valide = true;
         } else {
-            printf("Choix invalide. Veuillez choisir une cible valide.\n");
+            printf("Choix invalide. Veuillez choisir un nombre entre 0 et %d.\n", max_index);
         }
     }
     
@@ -743,4 +807,128 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
     }
     
     return choix; // Retourne l'index dans la liste des cibles valides
+}
+
+// Fonction pour lire un entier de manière sécurisée
+int lire_entier_securise() {
+    char buffer[32];
+    int valeur;
+    
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        return -1; // Erreur de lecture
+    }
+    
+    // Vérifier si l'entrée est un nombre valide
+    if (sscanf(buffer, "%d", &valeur) != 1) {
+        return -1; // Entrée non numérique
+    }
+    
+    return valeur;
+}
+
+// Fonction pour gérer le tour d'un joueur humain
+void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
+    bool action_valide = false;
+    
+    while (!action_valide) {
+        // Afficher le menu des actions
+        afficher_menu_actions(joueur);
+        
+        // Lire le choix du joueur
+        printf("Votre choix: ");
+        int choix = lire_entier_securise();
+        
+        if (choix == -1) {
+            printf("Entrée invalide. Veuillez entrer un nombre.\n");
+            continue;
+        }
+        
+        if (choix == 1) {
+            // Attaque de base
+            int cible_index = choisir_cible(combat, joueur->controleur, -1, joueur);
+            if (cible_index >= 0) {
+                // Trouver la cible réelle
+                int index_reel = 0;
+                for (int i = 0; i < combat->nombre_participants; i++) {
+                    EtatCombattant* c = &combat->participants[i];
+                    bool est_allie = (c->controleur == joueur->controleur);
+                    if (!est_ko(c->combattant) && !est_allie && c != joueur) {
+                        if (index_reel == cible_index) {
+                            attaque_base(joueur, c);
+                            action_valide = true;
+                            break;
+                        }
+                        index_reel++;
+                    }
+                }
+            } else if (cible_index == -1) {
+                printf("Aucune cible disponible pour cette action.\n");
+            }
+        } else if (choix >= 2 && choix <= MAX_TECHNIQUES + 1) {
+            // Technique spéciale
+            int tech_index = choix - 2;
+            
+            if (tech_index < 0 || tech_index >= MAX_TECHNIQUES) {
+                printf("Technique invalide.\n");
+                continue;
+            }
+            
+            if (!joueur->combattant->techniques[tech_index].activable) {
+                printf("Cette technique n'est pas activable.\n");
+                continue;
+            }
+            
+            if (joueur->cooldowns[tech_index] > 0) {
+                printf("Cette technique est en recharge pour %d tours.\n", joueur->cooldowns[tech_index]);
+                continue;
+            }
+            
+            int cible_index = choisir_cible(combat, joueur->controleur, tech_index, joueur);
+            
+            if (cible_index == -3) {
+                // Se cibler soi-même
+                utiliser_technique(joueur, tech_index, joueur);
+                action_valide = true;
+            } else if (cible_index == -2) {
+                // Cibler tous les alliés ou ennemis
+                bool vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
+                                  joueur->combattant->techniques[tech_index].type == 3 || 
+                                  joueur->combattant->techniques[tech_index].type == 5);
+                
+                for (int i = 0; i < combat->nombre_participants; i++) {
+                    EtatCombattant* c = &combat->participants[i];
+                    bool est_allie = (c->controleur == joueur->controleur);
+                    
+                    if (!est_ko(c->combattant) && est_allie == vise_allie) {
+                        utiliser_technique(joueur, tech_index, c);
+                    }
+                }
+                action_valide = true;
+            } else if (cible_index >= 0) {
+                // Cibler un combattant spécifique
+                int index_reel = 0;
+                bool vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
+                                  joueur->combattant->techniques[tech_index].type == 3 || 
+                                  joueur->combattant->techniques[tech_index].type == 5);
+                
+                for (int i = 0; i < combat->nombre_participants; i++) {
+                    EtatCombattant* c = &combat->participants[i];
+                    bool est_allie = (c->controleur == joueur->controleur);
+                    
+                    if (!est_ko(c->combattant) && est_allie == vise_allie && c != joueur) {
+                        if (index_reel == cible_index) {
+                            utiliser_technique(joueur, tech_index, c);
+                            action_valide = true;
+                            break;
+                        }
+                        index_reel++;
+                    }
+                }
+            } else if (cible_index == -1) {
+                printf("Aucune cible disponible pour cette technique.\n");
+            }
+        } else {
+            printf("Choix invalide. Veuillez choisir une action entre 1 et %d.\n", MAX_TECHNIQUES + 1);
+        }
+    }
 }

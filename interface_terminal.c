@@ -13,7 +13,7 @@ int main(void) {
     // Création des équipes
     Equipe equipe1 = {.name = "Equipe Joueur", .member_count = 2};
     equipe1.members[0] = *musu;
-    equipe1.members[0] = *freettle;
+    equipe1.members[1] = *freettle;
 
     Equipe equipe2 = {.name = "Equipe IA", .member_count = 1};
     equipe2.members[0] = *freettle;

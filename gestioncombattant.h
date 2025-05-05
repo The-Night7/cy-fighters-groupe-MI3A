@@ -48,7 +48,17 @@ typedef struct {
 Combattant *creer_combattant(const char *name);
 void detruire_combattant(Combattant *Combattant);
 
-void init_technique(Technique *tech, const char *name, const char *description, const char *cible, int ncible,
-    float puissance, int nb_tour_recharge, bool possede, const char *nom_effet, int nb_tour_actifs, int type);
+void init_technique(
+    Technique *tech, 
+    const char *name, 
+    const char *description, 
+    const char *cible, 
+    int ncible,
+    float puissance, 
+    int nb_tour_recharge, 
+    bool possede, 
+    const char *nom_effet, 
+    int nb_tour_actifs, 
+    int type);
 
 #endif
