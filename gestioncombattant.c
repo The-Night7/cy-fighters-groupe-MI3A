@@ -3,8 +3,8 @@
 /*fonction qui remplie la structure Technique (1 appel de la fct = les données de UNE technique sont stocké dans différentes variables),
 si la technique possède un effet(exemple : étourdissement) alors la fonction est initialisée avec possède = true,
 lorsque possède = true, la fonction remplie des informations supplémentaires comme le nom de l'effet et la durée de cet effet.
-note : la variable cible est un entier qui correspond à : 1 cible unique,2 plusieurs cibles,
-De même pour la variable type : 1 dégats, 2 soins, 3 bouclier,4 brulûre*/
+note : la variable cible est un entier qui correspond à : 1 cible unique,2 plusieurs cibles,3 soi-même,
+De même pour la variable type : 0 rien, 1 dégats, 2 soins, 3 bouclier,4 brulûre*/
 
 void init_technique(Technique *tech, const char *nom, const char *description, const char *cible, int ncible,
                     float puissance, int nb_tour_recharge, bool possede, const char *nom_effet, int nb_tour_actifs, int type)
@@ -67,8 +67,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 200;
         combattant->attaque = 100;
         combattant->defense = 20;
-        combattant->agility = 0;
-        combattant->speed = 100;
+        combattant->speed = 115;
 
         init_technique(&combattant->techniques[0], "Tempête",
                        "Inflige des dégats d'eau majeurs. Doit se recharger.",
@@ -78,12 +77,12 @@ Combattant *creer_combattant(const char *nom)
         init_technique(&combattant->techniques[1], "Reconstitution",
                        "Restaure quelques points de vie à chaque tour pour tous les alliés pendant 2 tours. Doit se recharger.",
                        "Plusieurs alliés", 2,
-                       -0.1, 4, 1, "Reconstitution", 3, 2); // puissance = taux de guérison -> négatif car si puissance <=0 alors soin.
+                       -0.2, 4, 1, "EFFET_RECONSTITUTION", 3, 2); // puissance = taux de guérison -> négatif car si puissance <=0 alors soin.
 
         init_technique(&combattant->techniques[2], "Eau énergisante",
                        "Restaure 20 % de vie. S'applique un boost de dégats pendant 2 tours",
                        "Un allié", 1,
-                       -0.2, 0, 1, "Boost dégats", 2, 5);
+                       -0.2, 0, 1, "EFFET_BOOST_ATTAQUE", 2, 2);
     }
 
     else if (strcmp(nom, "Freettle") == 0)
@@ -92,8 +91,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 200;
         combattant->attaque = 100;
         combattant->defense = 20;
-        combattant->agility = 0;
-        combattant->speed = 60;
+        combattant->speed = 110;
 
         init_technique(&combattant->techniques[0], "Poing de la revanche",
                        "Inflige des dégats mineurs",
@@ -103,12 +101,60 @@ Combattant *creer_combattant(const char *nom)
         init_technique(&combattant->techniques[1], "Etincelle de feu",
                        "Inflige des dégats Mineurs et brûle la cible",
                        "Un ennemi", 1,
-                       0, 2, 1, "Brulûre", 3, 4);
+                       0, 2, 1, "EFFET_BRULURE", 3, 4);
 
         init_technique(&combattant->techniques[2], "Mur infranchissable",
                        "Applique un bouclier moyen à la cible",
                        "Un allié", 1,
-                       0, 0, 1, "Bouclier Moyen", 2, 3);
+                       0, 0, 1, "EFFET_BOUCLIER", 2, 3);
+    }
+    
+    else if (strcmp(nom, "Marco") == 0)
+    {
+
+        combattant->Vie.courrante = combattant->Vie.max = 150;
+        combattant->attaque = 60;
+        combattant->defense = 80;
+        combattant->speed = 120;
+
+        init_technique(&combattant->techniques[0], "Flammes régénératrice",
+                       "Flammes redonnant 50% des pv max",
+                       "Tous les alliés", 2,
+                       -0.5, 3, 0, NULL, 0, 2);
+
+        init_technique(&combattant->techniques[1], "Blue bird",
+                       "Inflige des dégats moyens à la cible",
+                       "Un ennemi", 1,
+                       0.4, 0, 0, NULL, 0, 1);
+
+        init_technique(&combattant->techniques[2], "Flamme énergisantes",
+                       "Applique un boost de dégats à toute l'équipe",
+                       "Tous les alliés", 2,
+                       0, 1, 1, "EFFET_BOOST_ATTAQUE", 2, 0);
+    }
+    
+    else if (strcmp(nom, "Ronflex") == 0)
+    {
+
+        combattant->Vie.courrante = combattant->Vie.max = 400;
+        combattant->attaque = 120;
+        combattant->defense = 150;
+        combattant->speed = 50;
+
+        init_technique(&combattant->techniques[0], "Plaquage",
+                       "Ecrase un ennemi avec son ventre",
+                       "Un ennemi", 1,
+                       0.6, 0, 0, NULL, 0, 1);
+
+        init_technique(&combattant->techniques[1], "Gloutonnerie",
+                       "Se soigne de 30%",
+                       "Soi-même", 3,
+                       -0.3, 1, 0, NULL, 0, 2);
+
+        init_technique(&combattant->techniques[2], "Protection frontale",
+                       "Applique un boost de dégats à toute l'équipe",
+                       "Un allié", 1,
+                       0, 1, 1, "EFFET_BOUCLIER", 2, 3);
     }
 
     else
@@ -119,4 +165,3 @@ Combattant *creer_combattant(const char *nom)
     }
 
     return combattant;
-}
