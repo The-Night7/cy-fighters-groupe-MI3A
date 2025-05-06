@@ -50,13 +50,13 @@ int main(int argc, char *argv[]) {
     // Création des équipes
     Equipe equipe1;
     strcpy(equipe1.name, "Equipe Joueur 1");
-    equipe1.member_count = 1;
+    equipe1.member_count = 2;
     equipe1.members[0] = *musu;
     equipe1.members[1] = *ronflex;
     
     Equipe equipe2;
     strcpy(equipe2.name, mode_jvj ? "Equipe Joueur 2" : "Equipe IA");
-    equipe2.member_count = 1;
+    equipe2.member_count = 2;
     equipe2.members[0] = *freettle;
     equipe2.members[1] = *marco;
 
