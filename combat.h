@@ -12,8 +12,8 @@ typedef enum { JOUEUR, ORDI } TypeJoueur;
 typedef enum {
     EFFET_AUCUN,
     EFFET_POISON,
-    EFFET_ETOURDISSEMENT,//tour perdu
-    EFFET_BOOST_ATTAQUE,//+20% de dégats à chaque tour
+    EFFET_ETOURDISSEMENT, //tour perdu
+    EFFET_BOOST_ATTAQUE, //+20% de dégats à chaque tour
     EFFET_BOOST_DEFENSE,
     EFFET_BRULURE, //-20% de vie à chaque tour
     EFFET_RECONSTITUTION, //+20% de vie à chaque tour
@@ -44,6 +44,7 @@ typedef struct {
     int nombre_participants;        // Nombre total de combattants en combat
     int tour;                       // Compteur de tours
 } Combat;
+
 // Fonctions de base pour le cycle de vie du combat
 void initialiser_combat(Combat* combat, Equipe* eq1, Equipe* eq2); // Initialise le combat
 void initialiser_combat_mode(Combat* combat, Equipe* eq1, Equipe* eq2, bool mode_jvj); // Initialise le combat avec un mode spécifique
@@ -67,5 +68,9 @@ void afficher_menu_actions(EtatCombattant* joueur);
 int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant);
 int lire_entier_securise();                 // Lit un entier de manière sécurisée
 float calculer_degats(Combattant* attaquant, Technique* tech, Combattant* cible); // Calcul des dégâts
+
+// Prototypes des fonctions pour le mode joueur contre joueur
+void transition_joueurs(Combat* combat, EtatCombattant* joueur_suivant);
+void afficher_resultat_combat(Combat* combat);
 
 #endif

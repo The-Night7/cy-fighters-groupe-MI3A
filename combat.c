@@ -89,6 +89,7 @@ void gerer_tour_combat(Combat* combat) {
     
     // Traiter les actions des combattants dont la jauge est pleine
     bool action_effectuee = false;
+    EtatCombattant* dernier_joueur_humain = NULL; // Pour suivre le dernier joueur humain
     do {
         action_effectuee = false;
         
@@ -122,27 +123,36 @@ void gerer_tour_combat(Combat* combat) {
             if (!est_etourdi) {
                 // Gérer l'action selon le type de contrôleur
                 if (acteur->controleur == JOUEUR) {
+                    // Si c'est un joueur humain différent du précédent, faire la transition
+                    if (dernier_joueur_humain != NULL) {
+                        bool meme_equipe = false;
+                        
+                        // Vérifier si les deux joueurs sont dans la même équipe
+                        for (int i = 0; i < combat->equipe1->member_count; i++) {
+                            if (acteur->combattant == &combat->equipe1->members[i]) {
+                                for (int j = 0; j < combat->equipe1->member_count; j++) {
+                                    if (dernier_joueur_humain->combattant == &combat->equipe1->members[j]) {
+                                        meme_equipe = true;
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        
+                        // Si les joueurs sont de différentes équipes, faire la transition
+                        if (!meme_equipe) {
+                            transition_joueurs(combat, acteur);
+                        }
+                    }
                     // Tour du joueur humain
                     afficher_statuts_combat(combat);
                     
-                    // Déterminer si le joueur est de l'équipe 1 ou 2
-                    bool est_equipe1 = false;
-                    for (int i = 0; i < combat->equipe1->member_count; i++) {
-                        if (acteur->combattant == &combat->equipe1->members[i]) {
-                            est_equipe1 = true;
-                            break;
-                        }
-                    }
-                    
-                    printf("\nC'est au tour de %s (%s) d'agir!\n", 
-                           acteur->combattant->nom, 
-                           est_equipe1 ? "Joueur 1" : "Joueur 2");
-                    
                     gerer_tour_joueur(combat, acteur);
+                    dernier_joueur_humain = acteur;
                 } else {
                     // Tour de l'IA
                     printf("\nC'est au tour de %s (IA) d'agir!\n", acteur->combattant->nom);
-                    // Logique simple pour l'IA: attaque de base sur un ennemi aléatoire
                     
                     // Trouver les cibles valides
                     int nb_cibles = 0;
@@ -330,24 +340,30 @@ void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattan
 
 // Vérifie si une équipe a gagné (si l'autre équipe n'a plus de combattants vivants)
 bool verifier_victoire(Combat* combat) {
-    bool eq1_vivant = false; // Initialisation du statut de l'équipe 1
-    bool eq2_vivant = false; // Initialisation du statut de l'équipe 2
+    bool eq1_vivant = false;
+    bool eq2_vivant = false;
 
-    for (int i = 0; i < combat->equipe1->member_count; i++) { // Parcours des membres de l'équipe 1
-        if (!est_ko(&combat->equipe1->members[i])) { // Si un membre est vivant
-            eq1_vivant = true; // L'équipe 1 est vivante
-            break; // Sort de la boucle
+    for (int i = 0; i < combat->equipe1->member_count; i++) {
+        if (!est_ko(&combat->equipe1->members[i])) {
+            eq1_vivant = true;
+            break;
         }
     }
 
-    for (int i = 0; i < combat->equipe2->member_count; i++) { // Parcours des membres de l'équipe 2
-        if (!est_ko(&combat->equipe2->members[i])) { // Si un membre est vivant
-            eq2_vivant = true; // L'équipe 2 est vivante
-            break; // Sort de la boucle
+    for (int i = 0; i < combat->equipe2->member_count; i++) {
+        if (!est_ko(&combat->equipe2->members[i])) {
+            eq2_vivant = true;
+            break;
         }
     }
-    // Retourne vrai si une seule équipe a encore des combattants vivants
-    return !(eq1_vivant && eq2_vivant); // Vrai si une équipe a perdu
+    
+    // Si une équipe a gagné, afficher le résultat
+    if (!(eq1_vivant && eq2_vivant)) {
+        afficher_resultat_combat(combat);
+        return true;
+    }
+    
+    return false;
 }
 
 // Vérifie si le combattant est K.O. (points de vie <= 0)
@@ -577,8 +593,21 @@ void afficher_combat(const Combat* combat) {
 void afficher_statuts_combat(Combat* combat) {
     printf("\n=== TOUR %d ===\n", combat->tour); // Affiche le numéro du tour
     
+    // Déterminer si nous sommes en mode JvJ
+    bool mode_jvj = true;
+    for (int i = 0; i < combat->equipe2->member_count; i++) {
+        for (int j = 0; j < combat->nombre_participants; j++) {
+            if (combat->participants[j].combattant == &combat->equipe2->members[i] && 
+                combat->participants[j].controleur == ORDI) {
+                mode_jvj = false;
+                break;
+            }
+        }
+        if (!mode_jvj) break;
+    }
+    
     // Équipe 1
-    printf("\nÉquipe 1:\n"); // Titre de l'équipe 1
+    printf("\nÉquipe 1 (%s):\n", mode_jvj ? "JOUEUR 1" : "JOUEUR"); // Titre de l'équipe 1
     for (int i = 0; i < combat->equipe1->member_count; i++) { // Parcours des membres de l'équipe 1
         Combattant* c = &combat->equipe1->members[i]; // Récupère le combattant
         printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max); // Affiche les PV
@@ -617,7 +646,7 @@ void afficher_statuts_combat(Combat* combat) {
     }
     
     // Équipe 2
-    printf("\nÉquipe 2:\n"); // Titre de l'équipe 2
+    printf("\nÉquipe 2 (%s):\n", mode_jvj ? "JOUEUR 2" : "ORDINATEUR"); // Titre de l'équipe 2
     for (int i = 0; i < combat->equipe2->member_count; i++) { // Parcours des membres de l'équipe 2
         Combattant* c = &combat->equipe2->members[i]; // Récupère le combattant
         printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max); // Affiche les PV
@@ -677,7 +706,7 @@ void afficher_menu_actions(EtatCombattant* joueur) {
                     printf(")");
                     break;
                 case 2:
-                    printf(" (Soin");
+                    printf(" (Soin ");
                     if (tech->puissance < 0)
                         printf(" %.0f%%", -tech->puissance * 100);
                     printf(")");
@@ -700,8 +729,25 @@ void afficher_menu_actions(EtatCombattant* joueur) {
             
             // Afficher l'effet si présent
             if (tech->Effet.possede) {
+                // Selection du nom de l'effet
+                char *effet_nom;
+
+                if (strcmp(tech->Effet.nom, "EFFET_BOOST_ATTAQUE"))
+                    effet_nom = "Boost d'Attaque";
+                if (strcmp(tech->Effet.nom, "EFFET_BOOST_DEFENSE"))
+                    effet_nom = "Boost de Défense";
+                if (strcmp(tech->Effet.nom, "EFFET_BOUCLIER"))
+                    effet_nom = "Bouclier";
+                if (strcmp(tech->Effet.nom, "EFFET_BRULURE"))
+                    effet_nom = "Brûlure";
+                if (strcmp(tech->Effet.nom, "EFFET_ETOURDISSEMENT"))
+                    effet_nom = "Etourdissement";
+                if (strcmp(tech->Effet.nom, "EFFET_POISON"))
+                    effet_nom = "Poison";
+                if (strcmp(tech->Effet.nom, "EFFET_RECONSTITUTION"))
+                    effet_nom = "Reconstitution";
                 printf(" - Effet: %s (%d tours)", 
-                       tech->Effet.nom, 
+                       effet_nom, 
                        tech->Effet.nb_tour_actifs);
             }
             
@@ -714,11 +760,46 @@ void afficher_menu_actions(EtatCombattant* joueur) {
     }
 }
 
+// Affiche le résultat du combat
+void afficher_resultat_combat(Combat* combat) {
+    bool eq1_vivant = false;
+    for (int i = 0; i < combat->equipe1->member_count; i++) {
+        if (!est_ko(&combat->equipe1->members[i])) {
+            eq1_vivant = true;
+            break;
+        }
+    }
+    
+    bool mode_jvj = true;
+    for (int i = 0; i < combat->equipe2->member_count; i++) {
+        for (int j = 0; j < combat->nombre_participants; j++) {
+            if (combat->participants[j].combattant == &combat->equipe2->members[i] && 
+                combat->participants[j].controleur == ORDI) {
+                mode_jvj = false;
+                break;
+            }
+        }
+        if (!mode_jvj) break;
+    }
+    
+    printf("\n=== FIN DU COMBAT ===\n");
+    if (eq1_vivant) {
+        printf("L'équipe 1 (%s) remporte la victoire!\n", mode_jvj ? "JOUEUR 1" : "JOUEUR");
+    } else {
+        printf("L'équipe 2 (%s) remporte la victoire!\n", mode_jvj ? "JOUEUR 2" : "ORDINATEUR");
+    }
+    
+    // Afficher les statistiques finales
+    printf("\nStatistiques finales:\n");
+    afficher_statuts_combat(combat);
+}
+
 // Permet de choisir une cible en fonction du type de technique et de ses cibles
 int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant) {
     // Si tech_index est -1, c'est une attaque de base (vise toujours un ennemi unique)
     bool vise_allie = false; // Par défaut, on vise un ennemi
     bool cibles_multiples = false; // Par défaut, on vise une seule cible
+    bool soi_meme = false; // Par défaut, on ne se cible pas soi-même
     
     if (tech_index >= 0 && tech_index < MAX_TECHNIQUES) { // Si c'est une technique valide
         Technique* tech = &attaquant->combattant->techniques[tech_index]; // Récupère la technique
@@ -739,6 +820,13 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
         
         // Déterminer si la technique vise une ou plusieurs cibles
         cibles_multiples = (tech->ncible == 2); // Si ncible = 2, vise plusieurs cibles
+        soi_meme = (tech->ncible == 3); // Si ncible = 3, se vise soi-même
+    }
+    
+    // Si la technique se cible soi-même, retourner directement le code spécial
+    if (soi_meme) {
+        printf("\nLa technique cible automatiquement le lanceur!\n");
+        return -3; // Code spécial pour indiquer "soi-même"
     }
     
     // Si la technique vise plusieurs cibles, pas besoin de choisir
@@ -751,6 +839,54 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
     bool cibles_valides_existent = false;
     if (vise_allie && attaquant->combattant->Vie.courrante > 0) {
         cibles_valides_existent = true; // Le joueur lui-même est une cible valide
+    }
+    
+    // Vérifier si nous sommes en mode JvJ (tous les participants sont contrôlés par des joueurs)
+    bool mode_jvj = true;
+    for (int i = 0; i < combat->nombre_participants; i++) {
+        if (combat->participants[i].controleur == ORDI) {
+            mode_jvj = false;
+            break;
+        }
+    }
+    // Déterminer si le combattant est un allié ou un ennemi
+    bool est_allie;
+    for (int i = 0; i < combat->nombre_participants; i++) {
+        EtatCombattant* c = &combat->participants[i];
+        
+        
+        if (mode_jvj) {
+            // En mode JvJ, on vérifie si les combattants sont dans la même équipe
+            bool attaquant_equipe1 = false;
+            bool cible_equipe1 = false;
+            
+            // Vérifier si l'attaquant est dans l'équipe 1
+            for (int j = 0; j < combat->equipe1->member_count; j++) {
+                if (attaquant->combattant == &combat->equipe1->members[j]) {
+                    attaquant_equipe1 = true;
+                    break;
+                }
+            }
+            
+            // Vérifier si la cible est dans l'équipe 1
+            for (int j = 0; j < combat->equipe1->member_count; j++) {
+                if (c->combattant == &combat->equipe1->members[j]) {
+                    cible_equipe1 = true;
+                    break;
+                }
+            }
+            
+            // Les combattants sont des alliés s'ils sont dans la même équipe
+            est_allie = (attaquant_equipe1 == cible_equipe1);
+        } else {
+            // En mode JvO, on utilise le contrôleur comme avant
+            est_allie = (c->controleur == controleur);
+        }
+        
+        if (!est_ko(c->combattant) && (est_allie == vise_allie) && c != attaquant) {
+            cibles_valides_existent = true;
+            break;
+        }
     }
     
     for (int i = 0; i < combat->nombre_participants; i++) {
@@ -784,7 +920,30 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
             EtatCombattant* c = &combat->participants[i]; // Récupère l'état du combattant
             
             // Filtrer les cibles selon qu'on vise un allié ou un ennemi
-            bool est_allie = (c->controleur == controleur); // Vérifie si c'est un allié
+            bool est_allie;
+            
+            if (mode_jvj) {
+                bool attaquant_equipe1 = false;
+                bool cible_equipe1 = false;
+                
+                for (int j = 0; j < combat->equipe1->member_count; j++) {
+                    if (attaquant->combattant == &combat->equipe1->members[j]) {
+                        attaquant_equipe1 = true;
+                        break;
+                    }
+                }
+                
+                for (int j = 0; j < combat->equipe1->member_count; j++) {
+                    if (c->combattant == &combat->equipe1->members[j]) {
+                        cible_equipe1 = true;
+                        break;
+                    }
+                }
+                
+                est_allie = (attaquant_equipe1 == cible_equipe1);
+            } else {
+                est_allie = (c->controleur == controleur);
+            }
             if (!est_ko(c->combattant) && (est_allie == vise_allie) && c != attaquant) { // Si la cible est valide
                 printf("%d. %s (%.0f PV)", index, c->combattant->nom, c->combattant->Vie.courrante); // Affiche l'option de cible
                 
@@ -881,6 +1040,19 @@ int lire_entier_securise() {
 // Fonction pour gérer le tour d'un joueur humain
 void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
     bool action_valide = false;
+    bool vise_allie;
+    // Déterminer si le joueur est de l'équipe 1 ou 2
+    bool est_equipe1 = false;
+    for (int i = 0; i < combat->equipe1->member_count; i++) {
+        if (joueur->combattant == &combat->equipe1->members[i]) {
+            est_equipe1 = true;
+            break;
+        }
+    }
+    
+    // Afficher clairement quel joueur doit jouer
+    printf("\n=== TOUR DU %s ===\n", est_equipe1 ? "JOUEUR 1" : "JOUEUR 2");
+    printf("C'est à %s de jouer!\n", joueur->combattant->nom);
     
     while (!action_valide) {
         // Afficher le menu des actions
@@ -903,7 +1075,43 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
                 int index_reel = 0;
                 for (int i = 0; i < combat->nombre_participants; i++) {
                     EtatCombattant* c = &combat->participants[i];
-                    bool est_allie = (c->controleur == joueur->controleur);
+                    
+                    // Déterminer si c'est un allié en utilisant la même logique que dans choisir_cible
+                    bool est_allie;
+                    bool mode_jvj = true;
+                    
+                    for (int j = 0; j < combat->nombre_participants; j++) {
+                        if (combat->participants[j].controleur == ORDI) {
+                            mode_jvj = false;
+                            break;
+                        }
+                    }
+                    
+                    if (mode_jvj) {
+                        bool joueur_equipe1 = false;
+                        bool cible_equipe1 = false;
+                        
+                        // Vérifier si le joueur est dans l'équipe 1
+                        for (int j = 0; j < combat->equipe1->member_count; j++) {
+                            if (joueur->combattant == &combat->equipe1->members[j]) {
+                                joueur_equipe1 = true;
+                                break;
+                            }
+                        }
+                        
+                        // Vérifier si la cible est dans l'équipe 1
+                        for (int j = 0; j < combat->equipe1->member_count; j++) {
+                            if (c->combattant == &combat->equipe1->members[j]) {
+                                cible_equipe1 = true;
+                                break;
+                            }
+                        }
+                        
+                        est_allie = (joueur_equipe1 == cible_equipe1);
+                    } else {
+                        est_allie = (c->controleur == joueur->controleur);
+                    }
+                    
                     if (!est_ko(c->combattant) && !est_allie && c != joueur) {
                         if (index_reel == cible_index) {
                             attaque_base(joueur, c);
@@ -943,7 +1151,7 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
                 action_valide = true;
             } else if (cible_index == -2) {
                 // Cibler tous les alliés ou ennemis
-                bool vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
+                vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
                                   joueur->combattant->techniques[tech_index].type == 3 || 
                                   joueur->combattant->techniques[tech_index].type == 5);
                 
@@ -959,13 +1167,59 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
             } else if (cible_index >= 0) {
                 // Cibler un combattant spécifique
                 int index_reel = 0;
-                bool vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
+                 vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
                                   joueur->combattant->techniques[tech_index].type == 3 || 
                                   joueur->combattant->techniques[tech_index].type == 5);
                 
                 for (int i = 0; i < combat->nombre_participants; i++) {
                     EtatCombattant* c = &combat->participants[i];
-                    bool est_allie = (c->controleur == joueur->controleur);
+                    bool est_allie;
+                    bool mode_jvj = true;
+                    
+                    for (int j = 0; j < combat->nombre_participants; j++) {
+                        if (combat->participants[j].controleur == ORDI) {
+                            mode_jvj = false;
+                            break;
+                        }
+                    }
+                    
+                    if (mode_jvj) {
+                        bool joueur_equipe1 = false;
+                        bool cible_equipe1 = false;
+                        
+                        // Vérifier si le joueur est dans l'équipe 1
+                        for (int j = 0; j < combat->equipe1->member_count; j++) {
+                            if (joueur->combattant == &combat->equipe1->members[j]) {
+                                joueur_equipe1 = true;
+                                break;
+                            }
+                        }
+                        
+                        // Vérifier si la cible est dans l'équipe 1
+                        for (int j = 0; j < combat->equipe1->member_count; j++) {
+                            if (c->combattant == &combat->equipe1->members[j]) {
+                                cible_equipe1 = true;
+                                break;
+                            }
+                        }
+                        
+                        est_allie = (joueur_equipe1 == cible_equipe1);
+                    } else {
+                        est_allie = (c->controleur == joueur->controleur);
+                    }
+                    
+                    if (!est_ko(c->combattant) && !est_allie && c != joueur) {
+                        if (index_reel == cible_index) {
+                            attaque_base(joueur, c);
+                            action_valide = true;
+                            break;
+                        }
+                        index_reel++;
+                    }
+                }
+            } else if (cible_index == -1) {
+                printf("Aucune cible disponible pour cette action.\n");
+            }
                     
                     if (!est_ko(c->combattant) && est_allie == vise_allie && c != joueur) {
                         if (index_reel == cible_index) {
@@ -974,13 +1228,35 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
                             break;
                         }
                         index_reel++;
-                    }
-                }
-            } else if (cible_index == -1) {
+                    } else if (cible_index == -1) {
                 printf("Aucune cible disponible pour cette technique.\n");
             }
         } else {
             printf("Choix invalide. Veuillez choisir une action entre 1 et %d.\n", MAX_TECHNIQUES + 1);
         }
     }
+}
+
+// Fonction pour marquer la transition entre deux joueurs
+void transition_joueurs(Combat* combat, EtatCombattant* joueur_suivant) {
+    bool est_equipe1 = false;
+    for (int i = 0; i < combat->equipe1->member_count; i++) {
+        if (joueur_suivant->combattant == &combat->equipe1->members[i]) {
+            est_equipe1 = true;
+            break;
+        }
+    }
+    
+    printf("\n----------------------------------------------\n");
+    printf("Le contrôle passe au %s (%s)\n", 
+           est_equipe1 ? "JOUEUR 1" : "JOUEUR 2",
+           joueur_suivant->combattant->nom);
+    printf("Appuyez sur Entrée pour continuer...");
+    
+    // Attendre que le joueur appuie sur Entrée
+    char buffer[10];
+    fgets(buffer, sizeof(buffer), stdin);
+    
+    // Effacer l'écran (optionnel, selon votre environnement)
+    printf("\033[2J\033[H");  // Code ANSI pour effacer l'écran
 }
