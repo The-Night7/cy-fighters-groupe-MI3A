@@ -12,10 +12,12 @@ typedef enum { JOUEUR, ORDI } TypeJoueur;
 typedef enum {
     EFFET_AUCUN,
     EFFET_POISON,
-    EFFET_ETOURDISSEMENT,
-    EFFET_BOOST_ATTAQUE,
+    EFFET_ETOURDISSEMENT,//tour perdu
+    EFFET_BOOST_ATTAQUE,//+20% de dégats à chaque tour
     EFFET_BOOST_DEFENSE,
-    EFFET_BRULURE
+    EFFET_BRULURE //-20% de vie à chaque tour
+    EFFET_RECONSTITUTION //+20% de vie à chaque tour
+    EFFET_BOUCLIER //30% de bouclier
 } TypeEffet;
 
 typedef struct {
