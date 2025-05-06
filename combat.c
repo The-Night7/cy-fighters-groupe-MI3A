@@ -5,19 +5,18 @@
 #include <string.h> // pour strcmp
 
 // Fonction interne pour calculer les dégâts infligés par une attaque ou une technique
-static float calculer_degats(Combattant* attaquant, Technique* tech, Combattant* cible) {
-    /* en gros je fais dégats = (attaque x puissance technique) - (défense x 0.2) */
-    // Si la technique n'a pas de puissance, c'est probablement un soin
-    if (tech && tech->puissance <= 0) return 0; // Retourne 0 si c'est un soin
-
-    // Calcul des dégâts bruts
-    float puissance = tech ? tech->puissance : 0.3f; // Attaque de base = puissance 1
-    float base = attaquant->attaque * puissance; // Calcul de la base des dégâts
-    // Correction : convertir le float en int pour le modulo
-    float reduction = (cible->defense * 0.1f) + (rand() % (int)(cible->defense*0.9f)); // Calcul de la réduction de dégâts
-    float degats = fmaxf(base - reduction, 0); // Calcul des dégâts finaux (minimum 0)
-
-    return degats; // Retourne les dégâts calculés
+float calculer_degats(Combattant* attaquant, Technique* tech, Combattant* cible) {
+    /* en gros je fais dégats = (attaque attaquant x puissance technique) - (défense x 0.2) */
+    if (tech && tech->puissance <= 0) return 0; // si puissance négative alors bobye
+    float base_damage = attaquant->attaque * tech->puissance; // multiplie l'attaque de l'attanquant avec la puissance de la selection.
+    float reduction = cible->defense / 100.0 * 20;  // abracadabra c'est un poucentage
+    float damage = base_damage - reduction;
+    
+    // Variation aléatoire des dégâts (+/- 10%)
+    float variation = (float)((rand() % 20) - 10) / 100.0;
+    damage = damage * (1 + variation); // équivalent coup critique
+    
+    return damage > 0 ? damage : 0;
 }
 
 // Ajout de la fonction pour initialiser un combat en mode JvJ ou JvO
@@ -383,7 +382,7 @@ void appliquer_effet(EtatCombattant* cible, TypeEffet effet, int duree, float pu
     }
 }
 
-void appliquer_effets(Combat* combat) {
+void appliquer_effets(Combat* combat) { 
     for (int i = 0; i < combat->nombre_participants; i++) { // Parcours de tous les participants
         EtatCombattant* cs = &combat->participants[i]; // Récupère l'état du combattant
         
@@ -408,7 +407,6 @@ void appliquer_effets(Combat* combat) {
                     
                 case EFFET_ETOURDISSEMENT: // Si étourdissement
                     // Implémenter l'effet d'étourdissement ici
-                    // Par exemple, empêcher le combattant d'agir pendant ce tour
                     printf("%s est étourdi et ne peut pas agir!\n", cs->combattant->nom); // Message d'étourdissement
                     break;
                     

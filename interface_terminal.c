@@ -1,16 +1,24 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <time.h>
+#include "gestioncombattant.h"
+#include "combat.h"
+
 int main(int argc, char *argv[]) {
     // Initialisation du générateur de nombres aléatoires
     srand(time(NULL));
     
-    // Initialisation des combattants
+    // Création des combattants
     Combattant *musu = creer_combattant("Musu");
     Combattant *freettle = creer_combattant("Freettle");
-
+    
     if (!musu || !freettle) {
         printf("Erreur lors de la création des combattants.\n");
         return EXIT_FAILURE;
     }
-
+    
     // Choix du mode de jeu
     int choix_mode = 2;  // Par défaut: Joueur vs Ordinateur
     
@@ -19,7 +27,7 @@ int main(int argc, char *argv[]) {
         choix_mode = atoi(argv[1]);
         if (choix_mode != 1 && choix_mode != 2) {
             choix_mode = 2;  // Valeur par défaut si argument invalide
-    }
+        }
     } else {
         // Sinon demander à l'utilisateur
         printf("=== CY-FIGHTERS ===\n\n");
@@ -27,7 +35,7 @@ int main(int argc, char *argv[]) {
         printf("1. Joueur vs Joueur\n");
         printf("2. Joueur vs Ordinateur\n");
         printf("Votre choix: ");
-    
+        
         char buffer[32];
         if (fgets(buffer, sizeof(buffer), stdin) == NULL || sscanf(buffer, "%d", &choix_mode) != 1) {
             printf("Erreur de saisie. Mode Joueur vs Ordinateur sélectionné par défaut.\n");
@@ -59,11 +67,10 @@ int main(int argc, char *argv[]) {
     while (!verifier_victoire(&combat)) {
         gerer_tour_combat(&combat);
     }
-
-    // Résultat final
+    
     printf("\n=== FIN DU COMBAT ===\n");
     
-    // Déterminer le gagnant
+    // Déterminer le vainqueur
     bool eq1_vivant = false;
     for (int i = 0; i < combat.equipe1->member_count; i++) {
         if (!est_ko(&combat.equipe1->members[i])) {
@@ -72,13 +79,15 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    printf("Vainqueur: %s\n", eq1_vivant ? "Equipe Joueur 1" : (mode_jvj ? "Equipe Joueur 2" : "Equipe IA"));
+    printf("\nL'équipe %s remporte la victoire!\n", eq1_vivant ? equipe1.name : equipe2.name);
+    
+    // Afficher l'état final
     afficher_statuts_combat(&combat);
-
+    
     // Nettoyage
     nettoyer_combat(&combat);
     detruire_combattant(musu);
     detruire_combattant(freettle);
-
+    
     return EXIT_SUCCESS;
 }
