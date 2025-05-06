@@ -59,10 +59,10 @@ void initialiser_combat_mode(Combat* combat, Equipe* eq1, Equipe* eq2, bool mode
     combat->nombre_participants = total;
 }
 
-// Modification de la fonction gerer_tour_combat pour gérer le mode JvJ
+// Gère le déroulement d'un tour de combat (mise à jour des jauges, actions, etc.)
 void gerer_tour_combat(Combat* combat) {
-    combat->tour++;
-    printf("\n=== DÉBUT DU TOUR %d ===\n", combat->tour);
+    combat->tour++; // Incrémente le compteur de tours
+    printf("\n=== DÉBUT DU TOUR %d ===\n", combat->tour); // Affiche le numéro du tour
     
     // Appliquer les effets en cours (poison, brûlure, etc.)
     appliquer_effets(combat);
@@ -76,7 +76,7 @@ void gerer_tour_combat(Combat* combat) {
     for (int i = 0; i < combat->nombre_participants; i++) {
         EtatCombattant* cs = &combat->participants[i];
         if (!est_ko(cs->combattant)) {
-            cs->turn_meter += cs->combattant->speed;
+            cs->turn_meter += cs->combattant->speed; // Augmente la jauge de tour
         }
     }
     
@@ -118,7 +118,7 @@ void gerer_tour_combat(Combat* combat) {
                     // Tour du joueur humain
                     afficher_statuts_combat(combat);
                     
-                    // Afficher quel joueur doit jouer (J1 ou J2)
+                    // Déterminer si le joueur est de l'équipe 1 ou 2
                     bool est_equipe1 = false;
                     for (int i = 0; i < combat->equipe1->member_count; i++) {
                         if (acteur->combattant == &combat->equipe1->members[i]) {
@@ -789,7 +789,6 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
         
         // Lecture sécurisée de l'entrée utilisateur
         char buffer[32];
-        int result;
         
         if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
             printf("Erreur de lecture. Veuillez réessayer.\n");

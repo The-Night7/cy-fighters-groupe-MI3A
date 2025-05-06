@@ -1,9 +1,4 @@
-#include "combat.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
-int main(void) {
+int main(int argc, char *argv[]) {
     // Initialisation du générateur de nombres aléatoires
     srand(time(NULL));
     
@@ -17,25 +12,40 @@ int main(void) {
     }
 
     // Choix du mode de jeu
-    int choix_mode = 0;
-    printf("=== CY-FIGHTERS ===\n\n");
-    printf("Choisissez un mode de jeu:\n");
-    printf("1. Joueur vs Joueur\n");
-    printf("2. Joueur vs Ordinateur\n");
-    printf("Votre choix: ");
+    int choix_mode = 2;  // Par défaut: Joueur vs Ordinateur
     
-    char buffer[32];
-    if (fgets(buffer, sizeof(buffer), stdin) == NULL || sscanf(buffer, "%d", &choix_mode) != 1) {
-        printf("Erreur de saisie. Mode Joueur vs Ordinateur sélectionné par défaut.\n");
-        choix_mode = 2;
+    // Si un argument est fourni, l'utiliser comme choix de mode
+    if (argc > 1) {
+        choix_mode = atoi(argv[1]);
+        if (choix_mode != 1 && choix_mode != 2) {
+            choix_mode = 2;  // Valeur par défaut si argument invalide
+    }
+    } else {
+        // Sinon demander à l'utilisateur
+        printf("=== CY-FIGHTERS ===\n\n");
+        printf("Choisissez un mode de jeu:\n");
+        printf("1. Joueur vs Joueur\n");
+        printf("2. Joueur vs Ordinateur\n");
+        printf("Votre choix: ");
+    
+        char buffer[32];
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL || sscanf(buffer, "%d", &choix_mode) != 1) {
+            printf("Erreur de saisie. Mode Joueur vs Ordinateur sélectionné par défaut.\n");
+            choix_mode = 2;
+        }
     }
     
     bool mode_jvj = (choix_mode == 1);
     
     // Création des équipes
-    Equipe equipe1 = {.name = "Equipe Joueur 1", .member_count = 1};
+    Equipe equipe1;
+    strcpy(equipe1.name, "Equipe Joueur 1");
+    equipe1.member_count = 1;
     equipe1.members[0] = *musu;
-    Equipe equipe2 = {.name = mode_jvj ? "Equipe Joueur 2" : "Equipe IA", .member_count = 1};
+    
+    Equipe equipe2;
+    strcpy(equipe2.name, mode_jvj ? "Equipe Joueur 2" : "Equipe IA");
+    equipe2.member_count = 1;
     equipe2.members[0] = *freettle;
 
     // Initialisation du combat avec le mode choisi
