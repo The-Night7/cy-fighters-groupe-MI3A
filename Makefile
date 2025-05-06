@@ -2,7 +2,7 @@ CC       = gcc
 CFLAGS   = -Wall -Iinclude `sdl2-config --cflags`
 LIBS     = `sdl2-config --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 
-SRC      = src/menu.c
+SRC      = src/menu.c src/selection.c
 EXEC     = bin/jeu
 EAU_EXEC = bin/eau
 EAU_SRC  = interface_terminal.c combat.c gestioncombattant.c
@@ -28,7 +28,7 @@ eau : $(EAU_EXEC)
 $(EAU_EXEC) : $(EAU_SRC)
 	@echo "💦​ C'est de l'eau (mais elle est fraiche)."
 	@mkdir -p bin
-	@$(CC) $(CFLAGS) -o $@ $^ $(EAU_LIBS)  # Utilisation de EAU_LIBS au lieu de LIBS
+	@$(CC) $(CFLAGS) -o $@ $^ $(EAU_LIBS)
 	@echo "✅ Compilation réussie : $(EAU_EXEC)"
 	@echo "🎮 Lancement du jeu..."
 	@./$(EAU_EXEC)

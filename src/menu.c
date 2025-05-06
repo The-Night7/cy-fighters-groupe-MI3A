@@ -3,11 +3,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "selection.h"
 
 #define WINDOW_WIDTH 1800
 #define WINDOW_HEIGHT 900
 
 void SDL_ExitWithError(const char *message);
+void afficher_selection_ordi(SDL_Renderer*, SDL_Window*);
 
 void surlignerBouton(SDL_Renderer *renderer, SDL_Rect *rect) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -162,6 +164,7 @@ void afficher_choix_mode_jeu(SDL_Renderer *renderer, SDL_Window *window) {
         .x = 20, .y = 20, .w = 100, .h = 50
     };
 
+
     SDL_bool en_choix = SDL_TRUE;
     while (en_choix) {
         SDL_Event event;
@@ -178,10 +181,11 @@ void afficher_choix_mode_jeu(SDL_Renderer *renderer, SDL_Window *window) {
             } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 if (x >= rect_j1j2.x && x <= rect_j1j2.x + rect_j1j2.w &&
                     y >= rect_j1j2.y && y <= rect_j1j2.y + rect_j1j2.h) {
-                    // Lancer mode J1 vs J2
+                        afficher_selection_perso(renderer, window);
+
                 } else if (x >= rect_j1ordi.x && x <= rect_j1ordi.x + rect_j1ordi.w &&
                            y >= rect_j1ordi.y && y <= rect_j1ordi.y + rect_j1ordi.h) {
-                    // Lancer mode J1 vs ORDI
+                            afficher_selection_ordi(renderer, window);
                 } else if (x >= bouton_retour.x && x <= bouton_retour.x + bouton_retour.w &&
                            y >= bouton_retour.y && y <= bouton_retour.y + bouton_retour.h) {
                     en_choix = SDL_FALSE;
@@ -220,182 +224,86 @@ void afficher_choix_mode_jeu(SDL_Renderer *renderer, SDL_Window *window) {
 }
 
 
-
-
-
-
-
-int main(int argc, char **argv){
-
+int main(int argc, char **argv) {
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
-    //Lancement du SDL
-    if(SDL_Init(SDL_INIT_VIDEO) != 0){
-        SDL_ExitWithError("Initalisation SDL");
-    }
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+        SDL_ExitWithError("Initialisation SDL");
 
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
         SDL_ExitWithError("Initialisation de SDL_mixer");
-    }    
-    
-    //Création fenêtre + rendu
-    if(SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer) != 0){
+
+    if (SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer) != 0)
         SDL_ExitWithError("Création de fenêtre et de rendu échouée");
-    }
 
-    //Titre + Fond
-    SDL_Surface *logo = NULL;
-    SDL_Texture *texture = NULL;
-    SDL_Surface *fond = NULL;
-    SDL_Texture *background = NULL;
+    SDL_Surface *fond = SDL_LoadBMP("images/paysage.bmp");
+    SDL_Surface *logo = SDL_LoadBMP("images/logo.bmp");
+    if (!fond || !logo) SDL_ExitWithError("Erreur chargement fond ou logo");
 
-    //Boutons
-    SDL_Surface *jouer = NULL;
-    SDL_Texture *jouer_tex = NULL;
-    SDL_Surface *options = NULL;
-    SDL_Texture *options_tex = NULL;
-    SDL_Surface *quitter = NULL;
-    SDL_Texture *quitter_tex = NULL;
+    SDL_Surface *jouer = SDL_LoadBMP("images/jouer.bmp");
+    SDL_Surface *options = SDL_LoadBMP("images/options.bmp");
+    SDL_Surface *quitter = SDL_LoadBMP("images/quitter.bmp");
+    if (!jouer || !options || !quitter) SDL_ExitWithError("Erreur chargement boutons");
 
-
-
-    //Initialisation du titre et du fond
-    fond = SDL_LoadBMP("images/paysage.bmp");
-    logo = SDL_LoadBMP("images/logo.bmp");
-
-    //Initialisation des boutons
-    jouer = SDL_LoadBMP("images/jouer.bmp");
-    options = SDL_LoadBMP("images/options.bmp");
-    quitter = SDL_LoadBMP("images/quitter.bmp");
-
-    
-
-    if(logo == NULL || fond == NULL){
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_ExitWithError("Impossible de charger les images");
-    }
-
-    if (jouer == NULL || options == NULL || quitter == NULL) {
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_ExitWithError("Erreur de chargement de bouton");
-    }
-
-    //Initialisation titre + fond (textures)
-    background = SDL_CreateTextureFromSurface(renderer, fond);
-    SDL_FreeSurface(fond);
-    texture = SDL_CreateTextureFromSurface(renderer, logo);
-    SDL_FreeSurface(logo);
-
-    //Initialisation boutons (textures)
-    jouer_tex = SDL_CreateTextureFromSurface(renderer, jouer);
-    SDL_FreeSurface(jouer);
-    options_tex = SDL_CreateTextureFromSurface(renderer, options);
-    SDL_FreeSurface(options);
-    quitter_tex = SDL_CreateTextureFromSurface(renderer, quitter);
-    SDL_FreeSurface(quitter);
-
-    
-
-    if(texture == NULL || background == NULL){
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_ExitWithError("Impossible de créer la texture");
-    }
-
-    if (jouer_tex == NULL || options_tex == NULL || quitter_tex == NULL) {
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_ExitWithError("Erreur de création d'une texture de bouton");
-    }
+    SDL_Texture *background = SDL_CreateTextureFromSurface(renderer, fond);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, logo);
+    SDL_Texture *jouer_tex = SDL_CreateTextureFromSurface(renderer, jouer);
+    SDL_Texture *options_tex = SDL_CreateTextureFromSurface(renderer, options);
+    SDL_Texture *quitter_tex = SDL_CreateTextureFromSurface(renderer, quitter);
+    SDL_FreeSurface(fond); SDL_FreeSurface(logo);
+    SDL_FreeSurface(jouer); SDL_FreeSurface(options); SDL_FreeSurface(quitter);
 
     SDL_Rect rectangle;
-
-    if(SDL_QueryTexture(texture, NULL, NULL, &rectangle.w, &rectangle.h) != 0){
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_ExitWithError("Impossible de charger la texture");
-    }
-
+    SDL_QueryTexture(texture, NULL, NULL, &rectangle.w, &rectangle.h);
     rectangle.x = (WINDOW_WIDTH - rectangle.w) / 2;
     rectangle.y = WINDOW_HEIGHT / 8;
 
-
-    if(SDL_RenderCopy(renderer, background, NULL, NULL) != 0){
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_ExitWithError("Impossible d'afficher le fond");
-    }
-
-    if(SDL_RenderCopy(renderer, texture, NULL, &rectangle) != 0){
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_ExitWithError("Impossible d'afficher la texture");
-    }
-
     SDL_Rect rect_jouer, rect_options, rect_quitter;
-
     SDL_QueryTexture(jouer_tex, NULL, NULL, &rect_jouer.w, &rect_jouer.h);
     SDL_QueryTexture(options_tex, NULL, NULL, &rect_options.w, &rect_options.h);
     SDL_QueryTexture(quitter_tex, NULL, NULL, &rect_quitter.w, &rect_quitter.h);
 
-
-    // Espace horizontal entre les boutons
     int espace = 40;
-
-    // Y commun : en dessous du logo
     int y_boutons = rectangle.y + rectangle.h + 30;
-
-    // Largeur totale (3 boutons + 2 espaces)
     int largeur_total = rect_jouer.w + rect_options.w + rect_quitter.w + 2 * espace;
-
-    // Point de départ pour centrer l'ensemble
     int depart_x = (WINDOW_WIDTH - largeur_total) / 2;
 
-    // Position des trois boutons côte à côte
     rect_jouer.x = depart_x;
     rect_jouer.y = y_boutons;
-
     rect_options.x = rect_jouer.x + rect_jouer.w + espace;
     rect_options.y = y_boutons;
-
     rect_quitter.x = rect_options.x + rect_options.w + espace;
     rect_quitter.y = y_boutons;
 
-
+    SDL_RenderCopy(renderer, background, NULL, NULL);
+    SDL_RenderCopy(renderer, texture, NULL, &rectangle);
     SDL_RenderCopy(renderer, jouer_tex, NULL, &rect_jouer);
     SDL_RenderCopy(renderer, options_tex, NULL, &rect_options);
     SDL_RenderCopy(renderer, quitter_tex, NULL, &rect_quitter);
-
-
     SDL_RenderPresent(renderer);
-    
-    SDL_bool program_launched = SDL_TRUE;
 
     Mix_Music *musique = Mix_LoadMUS("sons/SSBB menu theme.mp3");
-    if (!musique) {
-        SDL_ExitWithError("Impossible de charger la musique");
-    }
-    Mix_PlayMusic(musique, -1);  // -1 = boucle infinie
+    if (!musique) SDL_ExitWithError("Impossible de charger la musique");
+    Mix_PlayMusic(musique, -1);
 
-
-    while(program_launched){
+    SDL_bool program_launched = SDL_TRUE;
+    while (program_launched) {
         SDL_Event event;
         int x_souris, y_souris;
         SDL_GetMouseState(&x_souris, &y_souris);
-    
-        while(SDL_PollEvent(&event) == 1){
-            switch(event.type){
+
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
                 case SDL_QUIT:
                     program_launched = SDL_FALSE;
                     break;
-    
+
                 case SDL_MOUSEBUTTONDOWN:
                     if (event.button.button == SDL_BUTTON_LEFT) {
                         int x = event.button.x;
                         int y = event.button.y;
+
                         if (x >= rect_quitter.x && x <= rect_quitter.x + rect_quitter.w &&
                             y >= rect_quitter.y && y <= rect_quitter.y + rect_quitter.h) {
                             program_launched = SDL_FALSE;
@@ -408,25 +316,18 @@ int main(int argc, char **argv){
                             y >= rect_jouer.y && y <= rect_jouer.y + rect_jouer.h) {
                             afficher_choix_mode_jeu(renderer, window);
                         }
-                        
-                        
                     }
-                    break;
-    
-                default:
                     break;
             }
         }
-    
-        // Redessiner tout à chaque frame
+
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, background, NULL, NULL);
         SDL_RenderCopy(renderer, texture, NULL, &rectangle);
         SDL_RenderCopy(renderer, jouer_tex, NULL, &rect_jouer);
         SDL_RenderCopy(renderer, options_tex, NULL, &rect_options);
         SDL_RenderCopy(renderer, quitter_tex, NULL, &rect_quitter);
-    
-        // Appliquer surbrillance si la souris est sur un bouton
+
         if (x_souris >= rect_jouer.x && x_souris <= rect_jouer.x + rect_jouer.w &&
             y_souris >= rect_jouer.y && y_souris <= rect_jouer.y + rect_jouer.h) {
             surlignerBouton(renderer, &rect_jouer);
@@ -439,28 +340,24 @@ int main(int argc, char **argv){
             y_souris >= rect_quitter.y && y_souris <= rect_quitter.y + rect_quitter.h) {
             surlignerBouton(renderer, &rect_quitter);
         }
-        
-    
+
         SDL_RenderPresent(renderer);
     }
-    
-
 
     SDL_DestroyTexture(jouer_tex);
     SDL_DestroyTexture(options_tex);
     SDL_DestroyTexture(quitter_tex);
-    
+    SDL_DestroyTexture(texture);
+    SDL_DestroyTexture(background);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    SDL_DestroyTexture(background);
-
     Mix_FreeMusic(musique);
     Mix_CloseAudio();
     SDL_Quit();
 
     return EXIT_SUCCESS;
-
 }
+
 
 
 void SDL_ExitWithError(const char *message){
