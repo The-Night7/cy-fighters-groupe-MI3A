@@ -1152,8 +1152,8 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
             } else if (cible_index == -2) {
                 // Cibler tous les alliés ou ennemis
                 vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
-                                  joueur->combattant->techniques[tech_index].type == 3 || 
-                                  joueur->combattant->techniques[tech_index].type == 5);
+                             joueur->combattant->techniques[tech_index].type == 3 || 
+                             joueur->combattant->techniques[tech_index].type == 5);
                 
                 for (int i = 0; i < combat->nombre_participants; i++) {
                     EtatCombattant* c = &combat->participants[i];
@@ -1167,9 +1167,9 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
             } else if (cible_index >= 0) {
                 // Cibler un combattant spécifique
                 int index_reel = 0;
-                 vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
-                                  joueur->combattant->techniques[tech_index].type == 3 || 
-                                  joueur->combattant->techniques[tech_index].type == 5);
+                vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
+                             joueur->combattant->techniques[tech_index].type == 3 || 
+                             joueur->combattant->techniques[tech_index].type == 5);
                 
                 for (int i = 0; i < combat->nombre_participants; i++) {
                     EtatCombattant* c = &combat->participants[i];
@@ -1187,7 +1187,6 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
                         bool joueur_equipe1 = false;
                         bool cible_equipe1 = false;
                         
-                        // Vérifier si le joueur est dans l'équipe 1
                         for (int j = 0; j < combat->equipe1->member_count; j++) {
                             if (joueur->combattant == &combat->equipe1->members[j]) {
                                 joueur_equipe1 = true;
@@ -1195,7 +1194,6 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
                             }
                         }
                         
-                        // Vérifier si la cible est dans l'équipe 1
                         for (int j = 0; j < combat->equipe1->member_count; j++) {
                             if (c->combattant == &combat->equipe1->members[j]) {
                                 cible_equipe1 = true;
@@ -1208,19 +1206,6 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
                         est_allie = (c->controleur == joueur->controleur);
                     }
                     
-                    if (!est_ko(c->combattant) && !est_allie && c != joueur) {
-                        if (index_reel == cible_index) {
-                            attaque_base(joueur, c);
-                            action_valide = true;
-                            break;
-                        }
-                        index_reel++;
-                    }
-                }
-            } else if (cible_index == -1) {
-                printf("Aucune cible disponible pour cette action.\n");
-            }
-                    
                     if (!est_ko(c->combattant) && est_allie == vise_allie && c != joueur) {
                         if (index_reel == cible_index) {
                             utiliser_technique(joueur, tech_index, c);
@@ -1228,7 +1213,9 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
                             break;
                         }
                         index_reel++;
-                    } else if (cible_index == -1) {
+                    }
+                }
+            } else if (cible_index == -1) {
                 printf("Aucune cible disponible pour cette technique.\n");
             }
         } else {
