@@ -7,8 +7,16 @@
 // Fonction interne pour calculer les dégâts infligés par une attaque ou une technique
 float calculer_degats(Combattant* attaquant, Technique* tech, Combattant* cible) {
     /* en gros je fais dégats = (attaque attaquant x puissance technique) - (défense x 0.2) */
-    if (tech && tech->puissance <= 0) return 0; // si puissance négative alors bobye
-    float base_damage = attaquant->attaque * tech->puissance; // multiplie l'attaque de l'attanquant avec la puissance de la selection.
+    
+    // Si tech est NULL (attaque de base), on utilise une puissance par défaut
+    float puissance = 0.5; // Puissance par défaut pour l'attaque de base
+    
+    if (tech) {
+        if (tech->puissance <= 0) return 0; // si puissance négative alors bobye
+        puissance = tech->puissance;
+    }
+    
+    float base_damage = attaquant->attaque * puissance;
     float reduction = cible->defense / 100.0 * 20;  // abracadabra c'est un poucentage
     float damage = base_damage - reduction;
     
