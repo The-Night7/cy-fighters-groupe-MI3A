@@ -2,6 +2,7 @@
 #define COMBAT_H
 
 #include "gestioncombattant.h"
+#include <stdbool.h>
 
 #define MAX_EFFECTS 10 // Nombre maximum d'effets temporaires par combattant
 
@@ -43,12 +44,14 @@ typedef struct {
 } Combat;
 // Fonctions de base pour le cycle de vie du combat
 void initialiser_combat(Combat* combat, Equipe* eq1, Equipe* eq2); // Initialise le combat
+void initialiser_combat_mode(Combat* combat, Equipe* eq1, Equipe* eq2, bool mode_jvj); // Initialise le combat avec un mode spécifique
 void gerer_tour_combat(Combat* combat);                            // Gère un tour complet de combat
 void nettoyer_combat(Combat* combat);                              // Libère la mémoire du combat
 
 // Fonctions d'action
 void attaque_base(EtatCombattant* attaquant, EtatCombattant* cible); // Effectue une attaque de base
 void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattant* cible); // Utilise une technique spéciale
+void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur);    // Gère le tour d'un joueur humain
 
 // Fonctions utilitaires
 bool est_ko(Combattant* c);                  // Vérifie si un combattant est K.O.
@@ -57,8 +60,10 @@ bool verifier_victoire(Combat* combat);      // Vérifie si une équipe a gagné
 void appliquer_effet(EtatCombattant* cible, TypeEffet effet, int duree, float puissance);
 void retirer_effet(EtatCombattant* cs, TypeEffet type);
 void afficher_combat(const Combat* combat);
-void afficher_statuts_combat(Combat* combat); // Modifié pour correspondre à l'implémentation
-void afficher_menu_actions(EtatCombattant* joueur); // Ajout de la déclaration manquante
-int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant); // Permet de choisir une cible en fonction du type de technique et de ses cibles
+void afficher_statuts_combat(Combat* combat);
+void afficher_menu_actions(EtatCombattant* joueur);
+int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant);
+int lire_entier_securise();                 // Lit un entier de manière sécurisée
+float calculer_degats(Combattant* attaquant, Technique* tech, Combattant* cible); // Calcul des dégâts
 
 #endif

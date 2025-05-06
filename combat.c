@@ -11,51 +11,58 @@ static float calculer_degats(Combattant* attaquant, Technique* tech, Combattant*
     if (tech && tech->puissance <= 0) return 0; // Retourne 0 si c'est un soin
 
     // Calcul des dégâts bruts
-    float puissance = tech ? tech->puissance : 1.0f; // Attaque de base = puissance 1
+    float puissance = tech ? tech->puissance : 0.3f; // Attaque de base = puissance 1
     float base = attaquant->attaque * puissance; // Calcul de la base des dégâts
     // Correction : convertir le float en int pour le modulo
-    float reduction = (cible->defense * 0.2f) + (rand() % (int)(cible->defense*0.8f)); // Calcul de la réduction de dégâts
+    float reduction = (cible->defense * 0.1f) + (rand() % (int)(cible->defense*0.9f)); // Calcul de la réduction de dégâts
     float degats = fmaxf(base - reduction, 0); // Calcul des dégâts finaux (minimum 0)
 
-    // Calcul de la chance d'esquive en fonction de l'agilité de la cible
-    float chance_esquive = cible->agility * 0.01f; // Conversion de l'agilité en pourcentage
-    if ((rand() % 100) < (chance_esquive * 100)) { // Test d'esquive
-        // L'attaque est esquivée
-        return 0; // Retourne 0 si l'attaque est esquivée
-    }
     return degats; // Retourne les dégâts calculés
 }
 
-// Initialise la structure Combat avec les deux équipes et prépare les états des combattants
-void initialiser_combat(Combat* combat, Equipe* eq1, Equipe* eq2) {
-    combat->equipe1 = eq1; // Assigne l'équipe 1
-    combat->equipe2 = eq2; // Assigne l'équipe 2
-    combat->tour = 0; // Initialise le compteur de tours à 0
-    // Création des états de combat pour chaque combattant des deux équipes
-    int total = eq1->member_count + eq2->member_count; // Calcul du nombre total de participants
-    combat->participants = malloc(total * sizeof(EtatCombattant)); // Allocation de mémoire pour les états des combattants
+// Ajout de la fonction pour initialiser un combat en mode JvJ ou JvO
+void initialiser_combat_mode(Combat* combat, Equipe* eq1, Equipe* eq2, bool mode_jvj) {
+    combat->equipe1 = eq1;
+    combat->equipe2 = eq2;
+    combat->tour = 0;
+    
+    int total = eq1->member_count + eq2->member_count;
+    combat->participants = malloc(total * sizeof(EtatCombattant));
 
-    for (int i = 0; i < total; i++) { // Parcours de tous les participants
+    for (int i = 0; i < total; i++) {
         // On récupère le bon combattant selon l'équipe
-        Combattant* c = (i < eq1->member_count) ? &eq1->members[i] : &eq2->members[i - eq1->member_count]; // Sélection du combattant
-        combat->participants[i] = (EtatCombattant){ // Initialisation de l'état du combattant
-            .combattant = c, // Pointeur vers le combattant
-            .turn_meter = 0.0f, // Jauge de tour à 0
-            .controleur = (i < eq1->member_count) ? JOUEUR : ORDI, // Définition du contrôleur
-            .nb_effets = 0  // Initialisation du nombre d'effets à 0
+        Combattant* c = (i < eq1->member_count) ? &eq1->members[i] : &eq2->members[i - eq1->member_count];
+        
+        // Si mode JvJ, les deux équipes sont contrôlées par des joueurs
+        // Si mode JvO, seule l'équipe 1 est contrôlée par un joueur
+        TypeJoueur controleur;
+        if (mode_jvj) {
+            // En mode JvJ, l'équipe 1 est contrôlée par le Joueur 1 et l'équipe 2 par le Joueur 2
+            controleur = JOUEUR;
+        } else {
+            // En mode JvO, l'équipe 1 est contrôlée par le Joueur et l'équipe 2 par l'Ordinateur
+            controleur = (i < eq1->member_count) ? JOUEUR : ORDI;
+        }
+        
+        combat->participants[i] = (EtatCombattant){
+            .combattant = c,
+            .turn_meter = 0.0f,
+            .controleur = controleur,
+            .nb_effets = 0
         };
+        
         // Initialisation des cooldowns de techniques
-        for (int j = 0; j < MAX_TECHNIQUES; j++) { // Parcours de toutes les techniques
-            combat->participants[i].cooldowns[j] = 0; // Initialisation du cooldown à 0
+        for (int j = 0; j < MAX_TECHNIQUES; j++) {
+            combat->participants[i].cooldowns[j] = 0;
         }
     }
-    combat->nombre_participants = total; // Sauvegarde du nombre total de participants
+    combat->nombre_participants = total;
 }
 
-// Gère le déroulement d'un tour de combat (mise à jour des jauges, actions, etc.)
+// Modification de la fonction gerer_tour_combat pour gérer le mode JvJ
 void gerer_tour_combat(Combat* combat) {
-    combat->tour++; // Incrémente le compteur de tours
-    printf("\n=== DÉBUT DU TOUR %d ===\n", combat->tour); // Affiche le numéro du tour
+    combat->tour++;
+    printf("\n=== DÉBUT DU TOUR %d ===\n", combat->tour);
     
     // Appliquer les effets en cours (poison, brûlure, etc.)
     appliquer_effets(combat);
@@ -69,7 +76,7 @@ void gerer_tour_combat(Combat* combat) {
     for (int i = 0; i < combat->nombre_participants; i++) {
         EtatCombattant* cs = &combat->participants[i];
         if (!est_ko(cs->combattant)) {
-            cs->turn_meter += cs->combattant->speed; // Augmente la jauge de tour
+            cs->turn_meter += cs->combattant->speed;
         }
     }
     
@@ -110,7 +117,20 @@ void gerer_tour_combat(Combat* combat) {
                 if (acteur->controleur == JOUEUR) {
                     // Tour du joueur humain
                     afficher_statuts_combat(combat);
-                    printf("\nC'est au tour de %s (joueur) d'agir!\n", acteur->combattant->nom);
+                    
+                    // Afficher quel joueur doit jouer (J1 ou J2)
+                    bool est_equipe1 = false;
+                    for (int i = 0; i < combat->equipe1->member_count; i++) {
+                        if (acteur->combattant == &combat->equipe1->members[i]) {
+                            est_equipe1 = true;
+                            break;
+                        }
+                    }
+                    
+                    printf("\nC'est au tour de %s (%s) d'agir!\n", 
+                           acteur->combattant->nom, 
+                           est_equipe1 ? "Joueur 1" : "Joueur 2");
+                    
                     gerer_tour_joueur(combat, acteur);
                 } else {
                     // Tour de l'IA
