@@ -92,6 +92,8 @@ int main(int argc, char *argv[]) {
     nettoyer_combat(&combat);
     detruire_combattant(musu);
     detruire_combattant(freettle);
+    detruire_combattant(marco);
+    detruire_combattant(ronflex);
     
     return EXIT_SUCCESS;
 }
