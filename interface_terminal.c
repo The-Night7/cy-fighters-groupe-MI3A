@@ -13,6 +13,8 @@ int main(int argc, char *argv[]) {
     // Création des combattants
     Combattant *musu = creer_combattant("Musu");
     Combattant *freettle = creer_combattant("Freettle");
+    Combattant *marco = creer_combattant("Marco");
+    Combattant *ronflex = creer_combattant("Ronflex");
     
     if (!musu || !freettle) {
         printf("Erreur lors de la création des combattants.\n");
@@ -50,11 +52,13 @@ int main(int argc, char *argv[]) {
     strcpy(equipe1.name, "Equipe Joueur 1");
     equipe1.member_count = 1;
     equipe1.members[0] = *musu;
+    equipe1.members[1] = *ronflex;
     
     Equipe equipe2;
     strcpy(equipe2.name, mode_jvj ? "Equipe Joueur 2" : "Equipe IA");
     equipe2.member_count = 1;
     equipe2.members[0] = *freettle;
+    equipe2.members[1] = *marco;
 
     // Initialisation du combat avec le mode choisi
     Combat combat;
