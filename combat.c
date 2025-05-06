@@ -390,6 +390,7 @@ void appliquer_effet(EtatCombattant* cible, TypeEffet effet, int duree, float pu
     }
 }
 
+// Dans la fonction appliquer_effets, modifiez le switch pour gérer tous les types d'effets
 void appliquer_effets(Combat* combat) { 
     for (int i = 0; i < combat->nombre_participants; i++) { // Parcours de tous les participants
         EtatCombattant* cs = &combat->participants[i]; // Récupère l'état du combattant
@@ -429,6 +430,22 @@ void appliquer_effets(Combat* combat) {
                     printf("%s subit %.1f dégâts de brûlure! Les flammes s'intensifient!\n", 
                            cs->combattant->nom, degats_brulure); // Message de brûlure
                     break;
+                    
+                case EFFET_RECONSTITUTION: // Si reconstitution
+                    // Soigne le combattant progressivement
+                    float soin = cs->combattant->Vie.max * eff->puissance; // Calcul du soin
+                    cs->combattant->Vie.courrante += soin; // Applique le soin
+                    if (cs->combattant->Vie.courrante > cs->combattant->Vie.max) {
+                        cs->combattant->Vie.courrante = cs->combattant->Vie.max; // Limite aux PV max
+                    }
+                    printf("%s récupère %.1f points de vie grâce à la reconstitution!\n", 
+                           cs->combattant->nom, soin); // Message de soin
+                    break;
+                    
+                case EFFET_BOUCLIER: // Si bouclier
+                    // Le bouclier est déjà appliqué par le boost de défense
+                    // Pas d'effet supplémentaire à chaque tour
+                    break;
             }
             
             // Décrémenter le compteur
@@ -443,7 +460,7 @@ void appliquer_effets(Combat* combat) {
     }
 }
 
-// Fonction pour retirer un effet
+// Dans la fonction retirer_effet, modifiez le switch pour gérer tous les types d'effets
 void retirer_effet(EtatCombattant* cs, TypeEffet type) {
     for (int i = 0; i < cs->nb_effets; i++) { // Parcours des effets
         if (cs->effets[i].type == type) { // Si c'est l'effet recherché
@@ -473,6 +490,16 @@ void retirer_effet(EtatCombattant* cs, TypeEffet type) {
                 case EFFET_BRULURE: // Si brûlure
                     // La brûlure n'a pas besoin d'être annulée, elle s'éteint simplement
                     printf("Les flammes sur %s s'éteignent.\n", cs->combattant->nom); // Message de fin de brûlure
+                    break;
+                    
+                case EFFET_RECONSTITUTION: // Si reconstitution
+                    // La reconstitution n'a pas besoin d'être annulée
+                    printf("L'effet de reconstitution sur %s se dissipe.\n", cs->combattant->nom); // Message de fin de reconstitution
+                    break;
+                    
+                case EFFET_BOUCLIER: // Si bouclier
+                    // Le bouclier est géré par le boost de défense, pas besoin de code supplémentaire
+                    printf("Le bouclier protégeant %s disparaît.\n", cs->combattant->nom); // Message de fin de bouclier
                     break;
             }
             

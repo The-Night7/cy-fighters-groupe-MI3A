@@ -165,3 +165,4 @@ Combattant *creer_combattant(const char *nom)
     }
 
     return combattant;
+}
