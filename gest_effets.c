@@ -4,6 +4,35 @@
 #include <math.h>
 #include <string.h> // pour strcmp
 
+// Fonction pour convertir une chaîne d'effet en TypeEffet
+TypeEffet convertir_nom_effet(const char* nom_effet) {
+    if (!nom_effet) return EFFET_AUCUN;
+    
+    if (strcmp(nom_effet, "EFFET_POISON") == 0) return EFFET_POISON;
+    if (strcmp(nom_effet, "EFFET_ETOURDISSEMENT") == 0) return EFFET_ETOURDISSEMENT;
+    if (strcmp(nom_effet, "EFFET_BOOST_ATTAQUE") == 0) return EFFET_BOOST_ATTAQUE;
+    if (strcmp(nom_effet, "EFFET_BOOST_DEFENSE") == 0) return EFFET_BOOST_DEFENSE;
+    if (strcmp(nom_effet, "EFFET_BRULURE") == 0) return EFFET_BRULURE;
+    if (strcmp(nom_effet, "EFFET_RECONSTITUTION") == 0) return EFFET_RECONSTITUTION;
+    if (strcmp(nom_effet, "EFFET_BOUCLIER") == 0) return EFFET_BOUCLIER;
+    
+    return EFFET_AUCUN;
+}
+
+// Fonction pour obtenir le nom d'un effet (à ajouter)
+const char* obtenir_nom_effet(TypeEffet effet) {
+    switch(effet) {
+        case EFFET_RECONSTITUTION: return "Reconstitution";
+        case EFFET_POISON: return "Poison";
+        case EFFET_ETOURDISSEMENT: return "Étourdissement";
+        case EFFET_BOOST_ATTAQUE: return "Boost d'attaque";
+        case EFFET_BOOST_DEFENSE: return "Boost de défense";
+        case EFFET_BRULURE: return "Brûlure";
+        case EFFET_BOUCLIER: return "Bouclier";
+        default: return "Aucun";
+    }
+}
+
 // Fonction pour appliquer un effet à un combattant
 void appliquer_effet(EtatCombattant* cible, TypeEffet effet, int duree, float puissance) {
     // Vérifier si l'effet existe déjà
@@ -92,8 +121,25 @@ void appliquer_effets(Combat* combat) {
                     break;
                     
                 case EFFET_BOUCLIER: // Si bouclier
-                    // Le bouclier est déjà appliqué par le boost de défense
-                    // Pas d'effet supplémentaire à chaque tour
+                    // Le bouclier est maintenant un effet de redirection des dégâts vers Ronflex
+                    // On cherche Ronflex dans les participants
+                    for (int k = 0; k < combat->nombre_participants; k++) {
+                        if (strcmp(combat->participants[k].combattant->nom, "Ronflex") == 0) {
+                            // Si on trouve Ronflex et qu'il n'est pas KO
+                            if (!est_ko(combat->participants[k].combattant)) {
+                                // Ronflex prend les dégâts à la place du porteur du bouclier
+                                float degats_rediriges = cs->combattant->Vie.max * 0.1; // 10% des PV max en dégâts
+                                combat->participants[k].combattant->Vie.courrante -= degats_rediriges;
+                                printf("Ronflex intercepte l'attaque et subit à la place de %s %.1f points de dégâts vers Ronflex!\n", 
+                                    cs->combattant->nom, degats_rediriges);
+                            } else {
+                                // Si Ronflex est KO, le bouclier se brise
+                                printf("Ronflex est KO, %s n'est pas protégé !\n", cs->combattant->nom);
+                                retirer_effet(cs, EFFET_BOUCLIER);
+                            }
+                                    break;
+                        }
+                    }
                     break;
             }
             
@@ -146,9 +192,63 @@ void retirer_effet(EtatCombattant* cs, TypeEffet type) {
                     printf("L'effet de reconstitution sur %s se dissipe.\n", cs->combattant->nom); // Message de fin de reconstitution
                     break;
                     
-                case EFFET_BOUCLIER: // Si bouclier
-                    // Le bouclier est géré par le boost de défense, pas besoin de code supplémentaire
-                    printf("Le bouclier protégeant %s disparaît.\n", cs->combattant->nom); // Message de fin de bouclier
+                case EFFET_BOUCLIER: 
+                    // On cherche Ronflex dans les participants
+                    for (int k = 0; k < combat->nombre_participants; k++) {
+                        if (strcmp(combat->participants[k].combattant->nom, "Ronflex") == 0) {
+                            // Vérifie si Ronflex est dans la même équipe
+                            bool meme_equipe = false;
+                            if (combat->equipe1->member_count > 0) {
+                                // Vérifie l'équipe 1
+                                for (int e = 0; e < combat->equipe1->member_count; e++) {
+                                    if (strcmp(combat->equipe1->members[e].nom, cs->combattant->nom) == 0) {
+                                        // Le porteur est dans l'équipe 1, vérifie si Ronflex aussi
+                                        for (int r = 0; r < combat->equipe1->member_count; r++) {
+                                            if (strcmp(combat->equipe1->members[r].nom, "Ronflex") == 0) {
+                                                meme_equipe = true;
+                                    break;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!meme_equipe && combat->equipe2->member_count > 0) {
+                                // Vérifie l'équipe 2 si pas trouvé dans équipe 1
+                                for (int e = 0; e < combat->equipe2->member_count; e++) {
+                                    if (strcmp(combat->equipe2->members[e].nom, cs->combattant->nom) == 0) {
+                                        // Le porteur est dans l'équipe 2, vérifie si Ronflex aussi
+                                        for (int r = 0; r < combat->equipe2->member_count; r++) {
+                                            if (strcmp(combat->equipe2->members[r].nom, "Ronflex") == 0) {
+                                                meme_equipe = true;
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Si Ronflex est dans la même équipe et n'est pas KO
+                            if (meme_equipe && !est_ko(combat->participants[k].combattant)) {
+                                // Ronflex prend les dégâts à la place du porteur du bouclier
+                                float degats_rediriges = cs->combattant->Vie.max * 0.1; // 10% des PV max en dégâts
+                                combat->participants[k].combattant->Vie.courrante -= degats_rediriges;
+                                printf("Ronflex intercepte l'attaque et subit à la place de %s %.1f points de dégâts!\n", 
+                                    cs->combattant->nom, degats_rediriges);
+                            } else if (!meme_equipe) {
+                                // Si Ronflex n'est pas dans la même équipe, l'effet est inutile
+                                printf("Ronflex n'est pas dans la même équipe que %s, le bouclier est inefficace!\n", 
+                                    cs->combattant->nom);
+                                retirer_effet(cs, EFFET_BOUCLIER);
+                            } else {
+                                // Si Ronflex est KO
+                                printf("Ronflex est KO, %s n'est plus protégé!\n", cs->combattant->nom);
+                                retirer_effet(cs, EFFET_BOUCLIER);
+                            }
+                            break;
+                        }
+                    }
                     break;
             }
             

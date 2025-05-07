@@ -45,6 +45,12 @@ void afficher_combat(const Combat* combat) {
                 case EFFET_BRULURE: // Si brûlure
                     printf("Brûlure"); // Affiche "Brûlure"
                     break;
+                case EFFET_RECONSTITUTION: // Si reconstitution
+                    printf("Reconstitution"); // Affiche "Reconstitution"
+                    break;
+                case EFFET_BOUCLIER: // Si bouclier
+                    printf("Garde du Corps"); // Affiche "Garde du Corps"
+                    break;
                 default: // Autre effet
                     printf("Inconnu"); // Affiche "Inconnu"
                     break;
@@ -99,6 +105,12 @@ void afficher_statuts_combat(Combat* combat) {
                         case EFFET_BRULURE: // Si brûlure
                             printf("Brûlure"); // Affiche "Brûlure"
                             break;
+                        case EFFET_RECONSTITUTION: // Si reconstitution
+                            printf("Reconst."); // Affiche "Reconst."
+                            break;
+                        case EFFET_BOUCLIER: // Si bouclier
+                            printf("Garde"); // Affiche "Garde"
+                            break;
                         default: // Autre effet
                             break;
                     }
@@ -137,6 +149,12 @@ void afficher_statuts_combat(Combat* combat) {
                             break;
                         case EFFET_BRULURE: // Si brûlure
                             printf("Brûlure"); // Affiche "Brûlure"
+                            break;
+                        case EFFET_RECONSTITUTION: // Si reconstitution
+                            printf("Reconst."); // Affiche "Reconst."
+                            break;
+                        case EFFET_BOUCLIER: // Si bouclier
+                            printf("Garde"); // Affiche "Garde"
                             break;
                         default: // Autre effet
                             break;
@@ -223,6 +241,20 @@ void afficher_menu_actions(EtatCombattant* joueur) {
                    tech->nom, joueur->cooldowns[i]);
         }
     }
+    // Dans la fonction qui affiche le menu des actions
+    printf("%d. %s (%s %.0f%%) - Cible: %s%s%s%s\n",
+        i + 1,
+        tech->nom,
+        tech->puissance <= 0 ? "Soin " : "Dégâts",
+        fabs(tech->puissance * 100),
+        tech->cible,
+        tech->Effet.possede ? " - Effet: " : "",
+        tech->Effet.possede ? obtenir_nom_effet(convertir_nom_effet(tech->Effet.nom)) : "",
+        tech->Effet.possede ? tech->Effet.nb_tour_actifs > 0 ? 
+            tech->Effet.nb_tour_actifs == 1 ? " (1 tour)" : 
+            tech->Effet.nb_tour_actifs == 2 ? " (2 tours)" : 
+            tech->Effet.nb_tour_actifs == 3 ? " (3 tours)" : 
+            " (plusieurs tours)" : "" : "");
 }
 
 // Affiche le résultat du combat
