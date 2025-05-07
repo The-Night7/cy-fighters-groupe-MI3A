@@ -2,13 +2,15 @@
 #define GEST_COMBAT_H
 
 #include "gestioncombattant.h"
-#include <stdbool.h>
-#include <stdio.h>
 
-// Fonctions d'affichage pour le combat
-void afficher_combat(const Combat* combat);
-void afficher_statuts_combat(Combat* combat);
-void afficher_menu_actions(EtatCombattant* joueur);
-void afficher_resultat_combat(Combat* combat);
+// Fonctions du combat
+void initialiser_combat_mode(Combat* combat, Equipe* eq1, Equipe* eq2, bool mode_jvj);
+void gerer_tour_combat(Combat* combat);
+void attaque_base(EtatCombattant* attaquant, EtatCombattant* cible);
+void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur);
+int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant);
+int lire_entier_securise();
+float calculer_degats(Combattant* attaquant, Technique* tech, Combattant* cible);
+void transition_joueurs(Combat* combat, EtatCombattant* joueur_suivant);
 
 #endif /* GEST_COMBAT_H */

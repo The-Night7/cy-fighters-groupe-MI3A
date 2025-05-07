@@ -1,10 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <time.h>
 #include "gestioncombattant.h"
 #include "combat.h"
+#include <time.h>
 
 int main(int argc, char *argv[]) {
     // Initialisation du générateur de nombres aléatoires
@@ -16,7 +12,7 @@ int main(int argc, char *argv[]) {
     Combattant *marco = creer_combattant("Marco");
     Combattant *ronflex = creer_combattant("Ronflex");
     
-    if (!musu || !freettle) {
+    if (!musu || !freettle || !marco || !ronflex) {
         printf("Erreur lors de la création des combattants.\n");
         return EXIT_FAILURE;
     }
