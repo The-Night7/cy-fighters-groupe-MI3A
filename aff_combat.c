@@ -6,6 +6,7 @@
 
 // Affichage de l'état du combat
 void afficher_combat(const Combat* combat) {
+    system("clear"); // Efface l'écran
     printf("\n--- État du combat (Tour %d) ---\n", combat->tour); // Affiche le numéro du tour
     
     for (int i = 0; i < combat->nombre_participants; i++) { // Parcours de tous les participants
@@ -62,6 +63,7 @@ void afficher_combat(const Combat* combat) {
 
 // Affiche les statuts des équipes
 void afficher_statuts_combat(Combat* combat) {
+    system("clear"); // Efface l'écran
     printf("\n=== TOUR %d ===\n", combat->tour); // Affiche le numéro du tour
     
     // Déterminer si nous sommes en mode JvJ

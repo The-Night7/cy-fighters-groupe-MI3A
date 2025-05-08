@@ -145,6 +145,8 @@ void gerer_tour_combat(Combat* combat) {
                             transition_joueurs(combat, acteur);
                         }
                     }
+
+                    afficher_combat(combat);
                     // Tour du joueur humain
                     afficher_statuts_combat(combat);
                     
@@ -572,9 +574,10 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
                 action_valide = true;
             } else if (cible_index == -2) {
                 // Cibler tous les alliés ou ennemis
-                vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
-                             joueur->combattant->techniques[tech_index].type == 3 || 
-                             joueur->combattant->techniques[tech_index].type == 5);
+                vise_allie = (joueur->combattant->techniques[tech_index].type == 0 ||  // boost
+                    joueur->combattant->techniques[tech_index].type == 2 ||   // soin
+                    joueur->combattant->techniques[tech_index].type == 3 ||   // bouclier
+                    joueur->combattant->techniques[tech_index].type == 5);    // autre type de boost
                 
                 for (int i = 0; i < combat->nombre_participants; i++) {
                     EtatCombattant* c = &combat->participants[i];
@@ -588,9 +591,10 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
             } else if (cible_index >= 0) {
                 // Cibler un combattant spécifique
                 int index_reel = 0;
-                vise_allie = (joueur->combattant->techniques[tech_index].type == 2 || 
-                             joueur->combattant->techniques[tech_index].type == 3 || 
-                             joueur->combattant->techniques[tech_index].type == 5);
+                vise_allie = (joueur->combattant->techniques[tech_index].type == 0 ||  // boost
+                    joueur->combattant->techniques[tech_index].type == 2 ||   // soin
+                    joueur->combattant->techniques[tech_index].type == 3 ||   // bouclier
+                    joueur->combattant->techniques[tech_index].type == 5);    // autre type de boost
                 
                 for (int i = 0; i < combat->nombre_participants; i++) {
                     EtatCombattant* c = &combat->participants[i];

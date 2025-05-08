@@ -4,7 +4,7 @@
 si la technique possède un effet(exemple : étourdissement) alors la fonction est initialisée avec possède = true,
 lorsque possède = true, la fonction remplie des informations supplémentaires comme le nom de l'effet et la durée de cet effet.
 note : la variable cible est un entier qui correspond à : 1 cible unique,2 plusieurs cibles,3 soi-même,
-De même pour la variable type : 0 rien, 1 dégats, 2 soins, 3 bouclier*/
+De même pour la variable type : 0 boost, 1 dégats, 2 soins, 3 bouclier*/
 
 void init_technique(Technique *tech, const char *nom, const char *description, const char *cible, int ncible,
                     float puissance, int nb_tour_recharge, bool possede, const char *nom_effet, int nb_tour_actifs, int type)
