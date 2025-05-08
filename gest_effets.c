@@ -1,4 +1,5 @@
 #include "gest_effets.h"
+#include "util_combat.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -69,7 +70,7 @@ void appliquer_effet(EtatCombattant* cible, TypeEffet effet, int duree, float pu
 }
 
 // Dans la fonction appliquer_effets, modifiez le switch pour gérer tous les types d'effets
-void appliquer_effets(Combat* combat) { 
+void appliquer_effets(Combat* combat) {
     for (int i = 0; i < combat->nombre_participants; i++) { // Parcours de tous les participants
         EtatCombattant* cs = &combat->participants[i]; // Récupère l'état du combattant
         
@@ -121,21 +122,16 @@ void appliquer_effets(Combat* combat) {
                     break;
                     
                 case EFFET_BOUCLIER: // Si bouclier
-                    // Le bouclier est maintenant un effet de redirection des dégâts vers Ronflex
-                    // On cherche Ronflex dans les participants
                     for (int k = 0; k < combat->nombre_participants; k++) {
                         if (strcmp(combat->participants[k].combattant->nom, "Ronflex") == 0) {
-                            // Si on trouve Ronflex et qu'il n'est pas KO
                             if (!est_ko(combat->participants[k].combattant)) {
-                                // Ronflex prend les dégâts à la place du porteur du bouclier
-                                float degats_rediriges = cs->combattant->Vie.max * 0.1; // 10% des PV max en dégâts
+                                float degats_rediriges = cs->combattant->Vie.max * 0.1;
                                 combat->participants[k].combattant->Vie.courrante -= degats_rediriges;
-                                printf("Ronflex intercepte l'attaque et subit à la place de %s %.1f points de dégâts vers Ronflex!\n", 
+                                printf("Ronflex intercepte l'attaque et subit à la place de %s %.1f points de dégâts!\n",
                                     cs->combattant->nom, degats_rediriges);
                             } else {
-                                // Si Ronflex est KO, le bouclier se brise
                                 printf("Ronflex est KO, %s n'est pas protégé !\n", cs->combattant->nom);
-                                retirer_effet(cs, EFFET_BOUCLIER);
+                                retirer_effet_type(combat, cs, EFFET_BOUCLIER);
                             }
                                     break;
                         }
@@ -148,117 +144,61 @@ void appliquer_effets(Combat* combat) {
             
             // Si effet terminé
             if (eff->tours_restants <= 0) { // Si l'effet est terminé
-                retirer_effet(cs, eff->type); // Retire l'effet
+                retirer_effet_type(combat, cs, eff->type); // Retire l'effet
                 j--; // On revient en arrière car l'effet a été retiré
             }
         }
     }
 }
 
-// Dans la fonction retirer_effet, modifiez le switch pour gérer tous les types d'effets
-void retirer_effet(EtatCombattant* cs, TypeEffet type) {
-    for (int i = 0; i < cs->nb_effets; i++) { // Parcours des effets
-        if (cs->effets[i].type == type) { // Si c'est l'effet recherché
-            // Annuler l'effet si nécessaire
-            switch (type) { // Selon le type d'effet
-                case EFFET_AUCUN: // Si aucun effet
-                    // Ne rien faire pour EFFET_AUCUN
-                    break;
-                    
-                case EFFET_POISON: // Si poison
-                    // Le poison n'a pas besoin d'être annulé, il suffit de ne plus l'appliquer
-                    break;
-                    
-                case EFFET_BOOST_ATTAQUE: // Si boost d'attaque
-                    cs->combattant->attaque /= (1 + cs->effets[i].puissance); // Annule le boost d'attaque
-                    break;
-                    
-                case EFFET_ETOURDISSEMENT: // Si étourdissement
-                    // L'étourdissement n'a pas besoin d'être annulé
-                    printf("%s n'est plus étourdi.\n", cs->combattant->nom); // Message de fin d'étourdissement
-                    break;
-                    
-                case EFFET_BOOST_DEFENSE: // Si boost de défense
-                    cs->combattant->defense /= (1 + cs->effets[i].puissance); // Annule le boost de défense
-                    break;
-                    
-                case EFFET_BRULURE: // Si brûlure
-                    // La brûlure n'a pas besoin d'être annulée, elle s'éteint simplement
-                    printf("Les flammes sur %s s'éteignent.\n", cs->combattant->nom); // Message de fin de brûlure
-                    break;
-                    
-                case EFFET_RECONSTITUTION: // Si reconstitution
-                    // La reconstitution n'a pas besoin d'être annulée
-                    printf("L'effet de reconstitution sur %s se dissipe.\n", cs->combattant->nom); // Message de fin de reconstitution
-                    break;
-                    
-                case EFFET_BOUCLIER: 
-                    // On cherche Ronflex dans les participants
-                    for (int k = 0; k < combat->nombre_participants; k++) {
-                        if (strcmp(combat->participants[k].combattant->nom, "Ronflex") == 0) {
-                            // Vérifie si Ronflex est dans la même équipe
-                            bool meme_equipe = false;
-                            if (combat->equipe1->member_count > 0) {
-                                // Vérifie l'équipe 1
-                                for (int e = 0; e < combat->equipe1->member_count; e++) {
-                                    if (strcmp(combat->equipe1->members[e].nom, cs->combattant->nom) == 0) {
-                                        // Le porteur est dans l'équipe 1, vérifie si Ronflex aussi
-                                        for (int r = 0; r < combat->equipe1->member_count; r++) {
-                                            if (strcmp(combat->equipe1->members[r].nom, "Ronflex") == 0) {
-                                                meme_equipe = true;
-                                    break;
-                                            }
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!meme_equipe && combat->equipe2->member_count > 0) {
-                                // Vérifie l'équipe 2 si pas trouvé dans équipe 1
-                                for (int e = 0; e < combat->equipe2->member_count; e++) {
-                                    if (strcmp(combat->equipe2->members[e].nom, cs->combattant->nom) == 0) {
-                                        // Le porteur est dans l'équipe 2, vérifie si Ronflex aussi
-                                        for (int r = 0; r < combat->equipe2->member_count; r++) {
-                                            if (strcmp(combat->equipe2->members[r].nom, "Ronflex") == 0) {
-                                                meme_equipe = true;
-                                                break;
-                                            }
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
+// Fonction pour retirer un effet à partir de son type
+void retirer_effet_type(Combat* combat, EtatCombattant* cible, TypeEffet type) {
+    // Chercher l'effet du type spécifié
+    for (int i = 0; i < cible->nb_effets; i++) {
+        if (cible->effets[i].type == type) {
+            retirer_effet_index(combat, cible, i);
+            break;
+        }
+    }
+}
 
-                            // Si Ronflex est dans la même équipe et n'est pas KO
-                            if (meme_equipe && !est_ko(combat->participants[k].combattant)) {
-                                // Ronflex prend les dégâts à la place du porteur du bouclier
-                                float degats_rediriges = cs->combattant->Vie.max * 0.1; // 10% des PV max en dégâts
-                                combat->participants[k].combattant->Vie.courrante -= degats_rediriges;
-                                printf("Ronflex intercepte l'attaque et subit à la place de %s %.1f points de dégâts!\n", 
-                                    cs->combattant->nom, degats_rediriges);
-                            } else if (!meme_equipe) {
-                                // Si Ronflex n'est pas dans la même équipe, l'effet est inutile
-                                printf("Ronflex n'est pas dans la même équipe que %s, le bouclier est inefficace!\n", 
-                                    cs->combattant->nom);
-                                retirer_effet(cs, EFFET_BOUCLIER);
-                            } else {
-                                // Si Ronflex est KO
-                                printf("Ronflex est KO, %s n'est plus protégé!\n", cs->combattant->nom);
-                                retirer_effet(cs, EFFET_BOUCLIER);
-                            }
-                            break;
-                        }
+// Fonction pour retirer un effet à partir de son index
+void retirer_effet_index(Combat* combat, EtatCombattant* cible, int index_effet) {
+    if (index_effet >= 0 && index_effet < cible->nb_effets) {
+        // Déplacer tous les effets suivants d'une position vers le haut
+        for (int i = index_effet; i < cible->nb_effets - 1; i++) {
+            cible->effets[i] = cible->effets[i + 1];
+        }
+        cible->nb_effets--;
+        
+        // Mise à jour des effets sur les autres combattants si nécessaire
+        for (int k = 0; k < combat->nombre_participants; k++) {
+            EtatCombattant* cs = &combat->participants[k];
+            
+            switch (cible->effets[index_effet].type) {
+                case EFFET_BOOST_ATTAQUE:
+                    if (cs->combattant == cible->combattant) {
+                        cs->combattant->attaque /= (1 + cible->effets[index_effet].puissance);
                     }
                     break;
+                case EFFET_BOOST_DEFENSE:
+                    if (cs->combattant == cible->combattant) {
+                        cs->combattant->defense /= (1 + cible->effets[index_effet].puissance);
+                    }
+                    break;
+                case EFFET_POISON:
+                case EFFET_ETOURDISSEMENT:
+                case EFFET_BRULURE:
+                case EFFET_RECONSTITUTION:
+                case EFFET_BOUCLIER:
+                case EFFET_AUCUN:
+                    // Ces effets n'ont pas besoin de nettoyage spécial
+                    break;
             }
-            
-            // Déplacer les effets suivants
-            for (int j = i; j < cs->nb_effets - 1; j++) { // Décale les effets suivants
-                cs->effets[j] = cs->effets[j+1]; // Copie l'effet suivant
-            }
-            cs->nb_effets--; // Réduit le nombre d'effets
-            printf("L'effet %d se dissipe sur %s\n", type, cs->combattant->nom); // Message de fin d'effet
-            return; // Sortie de la fonction
         }
+
+        printf("L'effet %s se dissipe sur %s\n", 
+               obtenir_nom_effet(cible->effets[index_effet].type), 
+               cible->combattant->nom);
     }
 }

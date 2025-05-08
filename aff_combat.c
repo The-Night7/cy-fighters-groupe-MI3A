@@ -178,83 +178,19 @@ void afficher_menu_actions(EtatCombattant* joueur) {
     for (int i = 0; i < MAX_TECHNIQUES; i++) { // Parcours des techniques
         Technique* tech = &joueur->combattant->techniques[i]; // Récupère la technique
         if (tech->activable && joueur->cooldowns[i] == 0) { // Si la technique est disponible
-            printf("%d. %s", i+2, tech->nom); // Affiche l'option de technique
-            
-            // Afficher le type de technique
-            switch(tech->type) {
-                case 1:
-                    printf(" (Dégâts");
-                    if (tech->puissance > 0)
-                        printf(" %.0f%%", tech->puissance * 100);
-                    printf(")");
-                    break;
-                case 2:
-                    printf(" (Soin ");
-                    if (tech->puissance < 0)
-                        printf(" %.0f%%", -tech->puissance * 100);
-                    printf(")");
-                    break;
-                case 3:
-                    printf(" (Bouclier)");
-                    break;
-                case 4:
-                    printf(" (Brûlure)");
-                    break;
-                case 5:
-                    printf(" (Boost)");
-                    break;
-                default:
-                    break;
-            }
-            
-            // Afficher la cible
-            printf(" - Cible: %s", tech->cible);
-            
-            // Afficher l'effet si présent
-            if (tech->Effet.possede) {
-                // Selection du nom de l'effet
-                char *effet_nom;
-
-                if (strcmp(tech->Effet.nom, "EFFET_BOOST_ATTAQUE"))
-                    effet_nom = "Boost d'Attaque";
-                if (strcmp(tech->Effet.nom, "EFFET_BOOST_DEFENSE"))
-                    effet_nom = "Boost de Défense";
-                if (strcmp(tech->Effet.nom, "EFFET_BOUCLIER"))
-                    effet_nom = "Bouclier";
-                if (strcmp(tech->Effet.nom, "EFFET_BRULURE"))
-                    effet_nom = "Brûlure";
-                if (strcmp(tech->Effet.nom, "EFFET_ETOURDISSEMENT"))
-                    effet_nom = "Etourdissement";
-                if (strcmp(tech->Effet.nom, "EFFET_POISON"))
-                    effet_nom = "Poison";
-                if (strcmp(tech->Effet.nom, "EFFET_RECONSTITUTION"))
-                    effet_nom = "Reconstitution";
-                printf(" - Effet: %s (%d tours)", 
-                       effet_nom, 
-                       tech->Effet.nb_tour_actifs);
-            }
-            
-            printf("\n"); // Nouvelle ligne
+            printf("%d. %s (Puissance: %.1f, Recharge: %d tours%s%s)\n",
+                i+2,
+                tech->nom,
+                tech->puissance,
+                tech->nb_tour_recharge,
+                tech->Effet.possede ? ", Effet: " : "",
+                tech->Effet.possede ? obtenir_nom_effet(convertir_nom_effet(tech->Effet.nom)) : "");
         } else if (tech->activable && joueur->cooldowns[i] > 0) {
             // Afficher aussi les techniques en cooldown mais de façon différente
             printf("  %s (en recharge: %d tours)\n", 
                    tech->nom, joueur->cooldowns[i]);
         }
     }
-    // Dans la fonction qui affiche le menu des actions
-    printf("%d. %s (%s %.0f%%) - Cible: %s%s%s%s\n",
-        i + 1,
-        tech->nom,
-        tech->puissance <= 0 ? "Soin " : "Dégâts",
-        fabs(tech->puissance * 100),
-        tech->cible,
-        tech->Effet.possede ? " - Effet: " : "",
-        tech->Effet.possede ? obtenir_nom_effet(convertir_nom_effet(tech->Effet.nom)) : "",
-        tech->Effet.possede ? tech->Effet.nb_tour_actifs > 0 ? 
-            tech->Effet.nb_tour_actifs == 1 ? " (1 tour)" : 
-            tech->Effet.nb_tour_actifs == 2 ? " (2 tours)" : 
-            tech->Effet.nb_tour_actifs == 3 ? " (3 tours)" : 
-            " (plusieurs tours)" : "" : "");
 }
 
 // Affiche le résultat du combat

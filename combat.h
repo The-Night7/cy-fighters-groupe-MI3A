@@ -7,4 +7,4 @@
 #include "gest_effets.h"
 #include "aff_combat.h"
 
-#endif
+#endif /* COMBAT_H */

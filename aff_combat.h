@@ -2,6 +2,8 @@
 #define AFF_COMBAT_H
 
 #include "gestioncombattant.h"
+#include "util_combat.h"
+#include "gest_effets.h"
 
 // Fonctions d'affichage
 void afficher_combat(const Combat* combat);

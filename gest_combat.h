@@ -2,6 +2,9 @@
 #define GEST_COMBAT_H
 
 #include "gestioncombattant.h"
+#include "util_combat.h"
+#include "aff_combat.h"
+#include "gest_effets.h"
 
 // Fonctions du combat
 void initialiser_combat_mode(Combat* combat, Equipe* eq1, Equipe* eq2, bool mode_jvj);

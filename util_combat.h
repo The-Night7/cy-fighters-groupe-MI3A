@@ -12,8 +12,7 @@
 void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattant* cible);
 
 // Fonctions utilitaires
-bool est_ko(Combattant* c);
-bool verifier_victoire(Combat* combat);
+bool est_ko(Combattant* c); // Remove const to match implementation
+bool verifier_victoire(Combat* combat); // Remove const to match implementation
 void nettoyer_combat(Combat* combat);
-
 #endif /* UTIL_COMBAT_H */
