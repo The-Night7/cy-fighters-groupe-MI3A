@@ -157,6 +157,54 @@ Combattant *creer_combattant(const char *nom)
                        0, 1, 1, "EFFET_BOUCLIER", 2, 3);
     }
 
+    else if (strcmp(nom, "Furina") == 0)
+    {
+
+        combattant->Vie.courrante = combattant->Vie.max = 250;
+        combattant->attaque = 80;
+        combattant->defense = 100;
+        combattant->speed = 130;
+
+        init_technique(&combattant->techniques[0], "Bénédiction aquatique",
+                       "Soigne un allié de 100PV",
+                       "Un allié", 1,
+                       -100, 4, 0, NULL, 0, 2);
+
+        init_technique(&combattant->techniques[1], "Danse de la pluie",
+                       "Augmente l'agilité de toute l'équipe",
+                       "Plusieurs alliés", 2,
+                       0, 5, 1, "EFFET_BOOST_AGILITE", 2, 0);
+
+        init_technique(&combattant->techniques[2], "Bouclier hydrique",
+                       "Crée une barrière qui absorbe 50% des dégats pendant 1 tour",
+                       "Un allié", 1,
+                       0, 3, 1, "EFFET_BOUCLIER", 1, 3);
+    }
+
+    else if (strcmp(nom, "Kirishima") == 0)
+    {
+
+        combattant->Vie.courrante = combattant->Vie.max = 350;
+        combattant->attaque = 140;
+        combattant->defense = 180;
+        combattant->speed = 60;
+
+        init_technique(&combattant->techniques[0], "Frappe Dévastatrice",
+                       "Attaque puissante qui ignore 30% de la défense ennemie",
+                       "Un ennemi", 1,
+                       0.7, 2, 0, NULL, 0, 1);
+
+        init_technique(&combattant->techniques[1], "Endurance du guerrier",
+                       "Augmente sa propre défense de 50% pendant 2 tours",
+                       "Soi-même", 3,
+                       0, 4, 1, "EFFET_BOOST_DEFENSE", 2, 0);
+
+        init_technique(&combattant->techniques[2], "Provocation",
+                       "Force les ennemis à le cibler",
+                       "Soi-même", 3,
+                       0, 3, 1, "EFFET_Provocation", 2, 0);
+    }
+
     else
     {
         free(combattant->nom);
