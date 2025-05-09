@@ -225,9 +225,10 @@ Combattant *creer_combattant(const char *nom)
 
         init_technique(&combattant->techniques[2], "Attaque rapide",
                        "Inflige des dégats modérés",
-                       "Un ennemi", 3,
-                       0, 3, 0, NULL, 0, 0);
+                       "Un ennemi", 1,
+                       0.5, 0, 0, NULL, 0, 1);
     }
+
 
     else
     {
