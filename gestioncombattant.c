@@ -205,6 +205,30 @@ Combattant *creer_combattant(const char *nom)
                        0, 3, 1, "EFFET_PROVOCATION", 2, 0);
     }
 
+    else if (strcmp(nom, "Sakura") == 0)
+    {
+
+        combattant->Vie.courrante = combattant->Vie.max = 290;
+        combattant->attaque = 150;
+        combattant->defense = 120;
+        combattant->speed = 110;
+
+        init_technique(&combattant->techniques[0], "Régénération Naturelle",
+                       "Récupère 15% de ses PV max à chaque tour",
+                       "Soi-même", 3,
+                       0, 3, 1, "EFFET_RECONSTITUTION", 1, 0);
+
+        init_technique(&combattant->techniques[1], "Frappe Vitale",
+                       "S'octroie 30% de vol de vie pendant 3 tours",
+                       "Soi-même", 3,
+                       0, 3, 1, "EFFET_VOL_DE_VIE", 3, 0);
+
+        init_technique(&combattant->techniques[2], "Attaque rapide",
+                       "Inflige des dégats modérés",
+                       "Un ennemi", 3,
+                       0, 3, 0, NULL, 0, 0);
+    }
+
     else
     {
         free(combattant->nom);
