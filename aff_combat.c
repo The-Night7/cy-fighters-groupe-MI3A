@@ -67,12 +67,12 @@ void afficher_statuts_combat(Combat* combat) {
     printf("\n=== TOUR %d ===\n", combat->tour); // Affiche le numéro du tour
     
     // Déterminer si nous sommes en mode JvJ
-    bool mode_jvj = true;
-    for (int i = 0; i < combat->equipe2->member_count; i++) {
-        for (int j = 0; j < combat->nombre_participants; j++) {
+    bool mode_jvj = true; // Initialise le mode JvJ à vrai
+    for (int i = 0; i < combat->equipe2->member_count; i++) { // Parcours l'équipe 2
+        for (int j = 0; j < combat->nombre_participants; j++) { // Parcours les participants
             if (combat->participants[j].combattant == &combat->equipe2->members[i] && 
-                combat->participants[j].controleur == ORDI) {
-                mode_jvj = false;
+                combat->participants[j].controleur == ORDI) { // Vérifie si un membre est contrôlé par l'IA
+                mode_jvj = false; // Met le mode JvJ à faux
                 break;
             }
         }
@@ -80,90 +80,90 @@ void afficher_statuts_combat(Combat* combat) {
     }
     
     // Équipe 1
-    printf("\nÉquipe 1 (%s):\n", mode_jvj ? "JOUEUR 1" : "JOUEUR"); // Titre de l'équipe 1
-    for (int i = 0; i < combat->equipe1->member_count; i++) { // Parcours des membres de l'équipe 1
+    printf("\nÉquipe 1 (%s):\n", mode_jvj ? "JOUEUR 1" : "JOUEUR"); // Affiche le titre de l'équipe 1
+    for (int i = 0; i < combat->equipe1->member_count; i++) { // Parcours les membres de l'équipe 1
         Combattant* c = &combat->equipe1->members[i]; // Récupère le combattant
         printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max); // Affiche les PV
-        if (est_ko(c)) printf(" (KO)"); // Indique si le combattant est KO
+        if (est_ko(c)) printf(" (KO)"); // Indique si KO
         
         // Afficher les effets actifs
-        for (int j = 0; j < combat->nombre_participants; j++) { // Parcours de tous les participants
-            if (combat->participants[j].combattant == c && combat->participants[j].nb_effets > 0) { // Si c'est le bon combattant et qu'il a des effets
-                printf(" ["); // Début de la liste d'effets
-                for (int k = 0; k < combat->participants[j].nb_effets; k++) { // Parcours des effets
+        for (int j = 0; j < combat->nombre_participants; j++) { // Parcours les participants
+            if (combat->participants[j].combattant == c && combat->participants[j].nb_effets > 0) { // Vérifie si le combattant a des effets
+                printf(" ["); // Début liste effets
+                for (int k = 0; k < combat->participants[j].nb_effets; k++) { // Parcours les effets
                     switch (combat->participants[j].effets[k].type) { // Selon le type d'effet
-                        case EFFET_POISON: // Si poison
-                            printf("Poison"); // Affiche "Poison"
+                        case EFFET_POISON:
+                            printf("Poison"); // Affiche poison
                             break;
-                        case EFFET_ETOURDISSEMENT: // Si étourdissement
-                            printf("Étourdi"); // Affiche "Étourdi"
+                        case EFFET_ETOURDISSEMENT:
+                            printf("Étourdi"); // Affiche étourdi
                             break;
-                        case EFFET_BOOST_ATTAQUE: // Si boost d'attaque
-                            printf("Att+"); // Affiche "Att+"
+                        case EFFET_BOOST_ATTAQUE:
+                            printf("Att+"); // Affiche boost attaque
                             break;
-                        case EFFET_BOOST_DEFENSE: // Si boost de défense
-                            printf("Def+"); // Affiche "Def+"
+                        case EFFET_BOOST_DEFENSE:
+                            printf("Def+"); // Affiche boost défense
                             break;
-                        case EFFET_BRULURE: // Si brûlure
-                            printf("Brûlure"); // Affiche "Brûlure"
+                        case EFFET_BRULURE:
+                            printf("Brûlure"); // Affiche brûlure
                             break;
-                        case EFFET_RECONSTITUTION: // Si reconstitution
-                            printf("Reconst."); // Affiche "Reconst."
+                        case EFFET_RECONSTITUTION:
+                            printf("Reconst."); // Affiche reconstitution
                             break;
-                        case EFFET_BOUCLIER: // Si bouclier
-                            printf("Garde"); // Affiche "Garde"
+                        case EFFET_BOUCLIER:
+                            printf("Garde"); // Affiche garde
                             break;
-                        default: // Autre effet
+                        default:
                             break;
                     }
-                    if (k < combat->participants[j].nb_effets - 1) printf(", "); // Ajoute une virgule si ce n'est pas le dernier effet
+                    if (k < combat->participants[j].nb_effets - 1) printf(", "); // Ajoute virgule si pas dernier
                 }
-                printf("]"); // Fin de la liste d'effets
+                printf("]"); // Fin liste effets
             }
         }
         printf("\n"); // Nouvelle ligne
     }
     
     // Équipe 2
-    printf("\nÉquipe 2 (%s):\n", mode_jvj ? "JOUEUR 2" : "ORDINATEUR"); // Titre de l'équipe 2
-    for (int i = 0; i < combat->equipe2->member_count; i++) { // Parcours des membres de l'équipe 2
-        Combattant* c = &combat->equipe2->members[i]; // Récupère le combattant
-        printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max); // Affiche les PV
-        if (est_ko(c)) printf(" (KO)"); // Indique si le combattant est KO
+    printf("\nÉquipe 2 (%s):\n", mode_jvj ? "JOUEUR 2" : "ORDINATEUR"); // Affiche titre équipe 2
+    for (int i = 0; i < combat->equipe2->member_count; i++) { // Parcours membres équipe 2
+        Combattant* c = &combat->equipe2->members[i]; // Récupère combattant
+        printf("- %s: %.0f/%.0f PV", c->nom, c->Vie.courrante, c->Vie.max); // Affiche PV
+        if (est_ko(c)) printf(" (KO)"); // Indique si KO
         
         // Afficher les effets actifs
-        for (int j = 0; j < combat->nombre_participants; j++) { // Parcours de tous les participants
-            if (combat->participants[j].combattant == c && combat->participants[j].nb_effets > 0) { // Si c'est le bon combattant et qu'il a des effets
-                printf(" ["); // Début de la liste d'effets
-                for (int k = 0; k < combat->participants[j].nb_effets; k++) { // Parcours des effets
-                    switch (combat->participants[j].effets[k].type) { // Selon le type d'effet
-                        case EFFET_POISON: // Si poison
-                            printf("Poison"); // Affiche "Poison"
+        for (int j = 0; j < combat->nombre_participants; j++) { // Parcours participants
+            if (combat->participants[j].combattant == c && combat->participants[j].nb_effets > 0) { // Vérifie effets
+                printf(" ["); // Début liste
+                for (int k = 0; k < combat->participants[j].nb_effets; k++) { // Parcours effets
+                    switch (combat->participants[j].effets[k].type) { // Selon type
+                        case EFFET_POISON:
+                            printf("Poison"); // Affiche poison
                             break;
-                        case EFFET_ETOURDISSEMENT: // Si étourdissement
-                            printf("Étourdi"); // Affiche "Étourdi"
+                        case EFFET_ETOURDISSEMENT:
+                            printf("Étourdi"); // Affiche étourdi
                             break;
-                        case EFFET_BOOST_ATTAQUE: // Si boost d'attaque
-                            printf("Att+"); // Affiche "Att+"
+                        case EFFET_BOOST_ATTAQUE:
+                            printf("Att+"); // Affiche boost attaque
                             break;
-                        case EFFET_BOOST_DEFENSE: // Si boost de défense
-                            printf("Def+"); // Affiche "Def+"
+                        case EFFET_BOOST_DEFENSE:
+                            printf("Def+"); // Affiche boost défense
                             break;
-                        case EFFET_BRULURE: // Si brûlure
-                            printf("Brûlure"); // Affiche "Brûlure"
+                        case EFFET_BRULURE:
+                            printf("Brûlure"); // Affiche brûlure
                             break;
-                        case EFFET_RECONSTITUTION: // Si reconstitution
-                            printf("Reconst."); // Affiche "Reconst."
+                        case EFFET_RECONSTITUTION:
+                            printf("Reconst."); // Affiche reconstitution
                             break;
-                        case EFFET_BOUCLIER: // Si bouclier
-                            printf("Garde"); // Affiche "Garde"
+                        case EFFET_BOUCLIER:
+                            printf("Garde"); // Affiche garde
                             break;
-                        default: // Autre effet
+                        default:
                             break;
                     }
-                    if (k < combat->participants[j].nb_effets - 1) printf(", "); // Ajoute une virgule si ce n'est pas le dernier effet
+                    if (k < combat->participants[j].nb_effets - 1) printf(", "); // Ajoute virgule si pas dernier
                 }
-                printf("]"); // Fin de la liste d'effets
+                printf("]"); // Fin liste
             }
         }
         printf("\n"); // Nouvelle ligne
@@ -173,14 +173,14 @@ void afficher_statuts_combat(Combat* combat) {
 
 // Affiche le menu des actions disponibles
 void afficher_menu_actions(EtatCombattant* joueur) {
-    printf("\n%s, choisissez une action:\n", joueur->combattant->nom); // Affiche le nom du joueur
-    printf("1. Attaque de base\n"); // Option d'attaque de base
+    printf("\n%s, choisissez une action:\n", joueur->combattant->nom); // Affiche nom joueur
+    printf("1. Attaque de base\n"); // Option attaque base
     
     // Affiche les techniques disponibles
-    for (int i = 0; i < MAX_TECHNIQUES; i++) { // Parcours des techniques
-        Technique* tech = &joueur->combattant->techniques[i]; // Récupère la technique
-        if (tech->activable && joueur->cooldowns[i] == 0) { // Si la technique est disponible
-            printf("%d. %s (Puissance: %.1f, Recharge: %d tours%s%s)\n",
+    for (int i = 0; i < MAX_TECHNIQUES; i++) { // Parcours techniques
+        Technique* tech = &joueur->combattant->techniques[i]; // Récupère technique
+        if (tech->activable && joueur->cooldowns[i] == 0) { // Si technique disponible
+            printf("%d. %s (Puissance: %.1f, Recharge: %d tours%s%s)\n", // Affiche détails technique
                 i+2,
                 tech->nom,
                 tech->puissance,
@@ -188,8 +188,7 @@ void afficher_menu_actions(EtatCombattant* joueur) {
                 tech->Effet.possede ? ", Effet: " : "",
                 tech->Effet.possede ? obtenir_nom_effet(convertir_nom_effet(tech->Effet.nom)) : "");
         } else if (tech->activable && joueur->cooldowns[i] > 0) {
-            // Afficher aussi les techniques en cooldown mais de façon différente
-            printf("  %s (en recharge: %d tours)\n", 
+            printf("  %s (en recharge: %d tours)\n", // Affiche technique en recharge
                    tech->nom, joueur->cooldowns[i]);
         }
     }
@@ -197,35 +196,34 @@ void afficher_menu_actions(EtatCombattant* joueur) {
 
 // Affiche le résultat du combat
 void afficher_resultat_combat(Combat* combat) {
-    system("clear");
-    bool eq1_vivant = false;
-    for (int i = 0; i < combat->equipe1->member_count; i++) {
-        if (!est_ko(&combat->equipe1->members[i])) {
-            eq1_vivant = true;
+    system("clear"); // Efface écran
+    bool eq1_vivant = false; // Initialise état équipe 1
+    for (int i = 0; i < combat->equipe1->member_count; i++) { // Vérifie membres équipe 1
+        if (!est_ko(&combat->equipe1->members[i])) { // Si un membre vivant
+            eq1_vivant = true; // Équipe 1 vivante
             break;
         }
     }
     
-    bool mode_jvj = true;
-    for (int i = 0; i < combat->equipe2->member_count; i++) {
-        for (int j = 0; j < combat->nombre_participants; j++) {
+    bool mode_jvj = true; // Initialise mode JvJ
+    for (int i = 0; i < combat->equipe2->member_count; i++) { // Parcours équipe 2
+        for (int j = 0; j < combat->nombre_participants; j++) { // Parcours participants
             if (combat->participants[j].combattant == &combat->equipe2->members[i] && 
-                combat->participants[j].controleur == ORDI) {
-                mode_jvj = false;
+                combat->participants[j].controleur == ORDI) { // Vérifie si IA
+                mode_jvj = false; // Pas mode JvJ
                 break;
             }
         }
         if (!mode_jvj) break;
     }
     
-    printf("\n=== FIN DU COMBAT ===\n");
-    if (eq1_vivant) {
-        printf("L'équipe 1 (%s) remporte la victoire!\n", mode_jvj ? "JOUEUR 1" : "JOUEUR");
+    printf("\n=== FIN DU COMBAT ===\n"); // Affiche fin combat
+    if (eq1_vivant) { // Si équipe 1 gagne
+        printf("L'équipe 1 (%s) remporte la victoire!\n", mode_jvj ? "JOUEUR 1" : "JOUEUR"); // Affiche victoire équipe 1
     } else {
-        printf("L'équipe 2 (%s) remporte la victoire!\n", mode_jvj ? "JOUEUR 2" : "ORDINATEUR");
+        printf("L'équipe 2 (%s) remporte la victoire!\n", mode_jvj ? "JOUEUR 2" : "ORDINATEUR"); // Affiche victoire équipe 2
     }
     
-    // Afficher les statistiques finales
-    printf("\nStatistiques finales:\n");
-    afficher_statuts_combat(combat);
+    printf("\nStatistiques finales:\n"); // Titre stats
+    afficher_statuts_combat(combat); // Affiche stats finales
 }

@@ -1,84 +1,56 @@
-#include "gestioncombattant.h"
-#include "combat.h"
-#include <time.h>
+#include <stdio.h>    // Pour printf, scanf, fgets, etc.  // Inclut les fonctions d'entrée/sortie standard
+#include <stdlib.h>   // Pour EXIT_SUCCESS, atoi  // Inclut les fonctions utilitaires standard
+#include <stdbool.h>  // Pour le type bool  // Inclut le type booléen
+#include <time.h>     // Pour time()  // Inclut les fonctions de gestion du temps
+#include "combat.h"   // Pour les structures Combat, NiveauDifficulte et les fonctions associées  // Inclut les définitions du combat
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {  // Point d'entrée du programme avec arguments
     // Initialisation du générateur de nombres aléatoires
-    srand(time(NULL));
-    
-    // Création des combattants
-    Combattant *musu = creer_combattant("Musu");
-    Combattant *freettle = creer_combattant("Freettle");
-    Combattant *marco = creer_combattant("Marco");
-    Combattant *ronflex = creer_combattant("Ronflex");
-    
-    if (!musu || !freettle || !marco || !ronflex) {
-        printf("Erreur lors de la création des combattants.\n");
-        return EXIT_FAILURE;
-    }
+    srand(time(NULL));  // Initialise le générateur avec l'heure actuelle
     
     // Choix du mode de jeu
-    int choix_mode = 2;  // Par défaut: Joueur vs Ordinateur
+    int choix_mode = 2;  // Par défaut: Joueur vs Ordinateur  // Initialise le mode par défaut
     
     // Si un argument est fourni, l'utiliser comme choix de mode
-    if (argc > 1) {
-        choix_mode = atoi(argv[1]);
-        if (choix_mode != 1 && choix_mode != 2) {
-            choix_mode = 2;  // Valeur par défaut si argument invalide
+    if (argc > 1) {  // Vérifie si un argument est passé en ligne de commande
+        choix_mode = atoi(argv[1]);  // Convertit l'argument en entier
+        if (choix_mode != 1 && choix_mode != 2) {  // Vérifie si le choix est valide
+            choix_mode = 2;  // Valeur par défaut si argument invalide  // Réinitialise au mode par défaut
         }
-    } else {
+    } else {  // Si aucun argument n'est fourni
         // Sinon demander à l'utilisateur
-        printf("=== CY-FIGHTERS ===\n\n");
-        printf("Choisissez un mode de jeu:\n");
-        printf("1. Joueur vs Joueur\n");
-        printf("2. Joueur vs Ordinateur\n");
-        printf("Votre choix: ");
+        printf("=== CY-FIGHTERS ===\n\n");  // Affiche le titre du jeu
+        printf("Choisissez un mode de jeu:\n");  // Affiche le menu de sélection
+        printf("1. Joueur vs Joueur\n");  // Affiche l'option 1
+        printf("2. Joueur vs Ordinateur\n");  // Affiche l'option 2
+        printf("Votre choix: ");  // Demande le choix à l'utilisateur
         
-        char buffer[32];
-        if (fgets(buffer, sizeof(buffer), stdin) == NULL || sscanf(buffer, "%d", &choix_mode) != 1) {
-            printf("Erreur de saisie. Mode Joueur vs Ordinateur sélectionné par défaut.\n");
-            choix_mode = 2;
+        char buffer[32];  // Déclare un buffer pour la saisie
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL || sscanf(buffer, "%d", &choix_mode) != 1) {  // Lit et vérifie la saisie
+            printf("Erreur de saisie. Mode Joueur vs Ordinateur sélectionné par défaut.\n");  // Affiche message d'erreur
+            choix_mode = 2;  // Réinitialise au mode par défaut
         }
     }
     
-    bool mode_jvj = (choix_mode == 1);
+    bool mode_jvj = (choix_mode == 1);  // Convertit le choix en booléen
     
-    // Création des équipes
-    Equipe equipe1;
-    strcpy(equipe1.name, "Equipe Joueur 1");
-    equipe1.member_count = 2;
-    equipe1.members[0] = *musu;
-    equipe1.members[1] = *ronflex;
+    // Initialisation du combat
+    Combat combat;  // Déclare la structure de combat
+    NiveauDifficulte difficulte = DIFFICULTE_MOYENNE; // Difficulté par défaut  // Initialise la difficulté
     
-    Equipe equipe2;
-    strcpy(equipe2.name, mode_jvj ? "Equipe Joueur 2" : "Equipe IA");
-    equipe2.member_count = 2;
-    equipe2.members[0] = *freettle;
-    equipe2.members[1] = *marco;
+    // Utilisation de la nouvelle fonction de configuration
+    configurer_combat(&combat, mode_jvj, &difficulte);  // Configure le combat
 
-    // Initialisation du combat avec le mode choisi
-    Combat combat;
-    initialiser_combat_mode(&combat, &equipe1, &equipe2, mode_jvj);
-
-    printf("\n=== DÉBUT DU COMBAT ===\n");
-    printf("Mode: %s\n\n", mode_jvj ? "Joueur vs Joueur" : "Joueur vs Ordinateur");
+    printf("\n=== DÉBUT DU COMBAT ===\n");  // Affiche le début du combat
+    printf("Mode: %s\n\n", mode_jvj ? "Joueur vs Joueur" : "Joueur vs Ordinateur");  // Affiche le mode choisi
 
     // Boucle principale du combat
-    while (!verifier_victoire(&combat)) {
-        gerer_tour_combat(&combat);
+    while (!verifier_victoire(&combat)) {  // Continue tant qu'il n'y a pas de vainqueur
+        gerer_tour_combat(&combat);  // Gère un tour de combat
     }
     
-   afficher_resultat_combat(&combat);
-    
-    // Afficher l'état final
-    afficher_statuts_combat(&combat);
-    
     // Nettoyage
-    nettoyer_combat(&combat);
-    detruire_combattant(musu);
-    detruire_combattant(freettle);
-    detruire_combattant(marco);
-    detruire_combattant(ronflex);
+    nettoyer_combat(&combat);  // Libère les ressources
     
-    return EXIT_SUCCESS;
+    return EXIT_SUCCESS;  // Termine le programme avec succès
 }
