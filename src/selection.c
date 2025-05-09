@@ -1,4 +1,3 @@
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
@@ -9,7 +8,9 @@
 typedef struct {
     const char *nom;
     SDL_Texture *texture;
+    SDL_Texture *nom_texture;
     SDL_Rect rect;
+    SDL_Rect nom_rect;
     int pris; // 0 = non, 1 = équipe 1, 2 = équipe 2
 } Personnage;
 
@@ -29,8 +30,8 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
 
     const char *noms[NB_PERSOS] = {"musu", "freettle", "ronflex", "kirishima", "marco", "furina"};
     Personnage persos[NB_PERSOS];
-    
-    int largeur = 160, hauteur = 160;
+
+    int largeur = 140, hauteur = 140;
     int x_pos[] = {60, 60, (1800 - largeur) / 2, (1800 - largeur) / 2, 1800 - largeur - 60, 1800 - largeur - 60};
     int y_pos[] = {460, 640, 460, 640, 460, 640};
 
@@ -41,6 +42,17 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
         persos[i].rect = (SDL_Rect){x_pos[i], y_pos[i], largeur, hauteur};
         persos[i].pris = 0;
         persos[i].nom = noms[i];
+
+        // Chargement du nom du personnage en image
+        char chemin_nom[100];
+        sprintf(chemin_nom, "images/nom_%s.bmp", noms[i]);
+        persos[i].nom_texture = IMG_LoadTexture(renderer, chemin_nom);
+        persos[i].nom_rect = (SDL_Rect){
+            persos[i].rect.x,
+            persos[i].rect.y + persos[i].rect.h + 5,
+            largeur,
+            hauteur / 4
+        };
     }
 
     int equipe1_count = 0, equipe2_count = 0;
@@ -59,6 +71,10 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
     int selection_en_cours = 0;
     int index_selection = -1;
 
+    // Historique des sélections pour pouvoir faire retour avec Tab
+    int historique_selection[6];
+    int top_historique = 0;
+
     SDL_bool en_fenetre = SDL_TRUE;
     SDL_Event event;
 
@@ -66,17 +82,35 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 en_fenetre = SDL_FALSE;
+
             } else if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    if (selection_en_cours && index_selection != -1) {
-                        // On annule juste la sélection en attente
-                        selection_en_cours = 0;
-                        index_selection = -1;
-                    } else {
-                        // Sinon, on quitte la fenêtre
-                        en_fenetre = SDL_FALSE;
+                    en_fenetre = SDL_FALSE;
+
+                } else if (event.key.keysym.sym == SDLK_TAB) {
+                    if (top_historique > 0) {
+                        int i = historique_selection[--top_historique];
+
+                        persos[i].rect = (SDL_Rect){x_pos[i], y_pos[i], largeur, hauteur};
+                        persos[i].nom_rect = (SDL_Rect){
+                            persos[i].rect.x,
+                            persos[i].rect.y + persos[i].rect.h + 5,
+                            largeur,
+                            hauteur / 4
+                        };
+
+                        if (persos[i].pris == 1 && equipe1_count > 0) {
+                            equipe1_count--;
+                            tour = 1;
+                        } else if (persos[i].pris == 2 && equipe2_count > 0) {
+                            equipe2_count--;
+                            tour = 2;
+                        }
+
+                        persos[i].pris = 0;
                     }
                 }
+
             } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 int x = event.button.x, y = event.button.y;
                 for (int i = 0; i < NB_PERSOS; i++) {
@@ -95,10 +129,12 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
                     persos[index_selection].rect = equipe1_pos[equipe1_count++];
                     persos[index_selection].pris = 1;
                     tour = 2;
+                    historique_selection[top_historique++] = index_selection;
                 } else if (tour == 2 && equipe2_count < 3) {
                     persos[index_selection].rect = equipe2_pos[equipe2_count++];
                     persos[index_selection].pris = 2;
                     tour = 1;
+                    historique_selection[top_historique++] = index_selection;
                 }
                 selection_en_cours = 0;
                 index_selection = -1;
@@ -113,9 +149,9 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
 
         for (int i = 0; i < NB_PERSOS; i++) {
             SDL_RenderCopy(renderer, persos[i].texture, NULL, &persos[i].rect);
+            SDL_RenderCopy(renderer, persos[i].nom_texture, NULL, &persos[i].nom_rect);
         }
 
-        // surbrillance temporaire jaune
         if (selection_en_cours && index_selection >= 0) {
             SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
             SDL_SetRenderDrawColor(renderer, 255, 255, 0, 180);
@@ -125,8 +161,11 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
         SDL_RenderPresent(renderer);
     }
 
-    for (int i = 0; i < NB_PERSOS; i++)
+    for (int i = 0; i < NB_PERSOS; i++) {
         SDL_DestroyTexture(persos[i].texture);
+        SDL_DestroyTexture(persos[i].nom_texture);
+    }
+
     SDL_DestroyTexture(fond);
     SDL_DestroyTexture(titre);
     SDL_DestroyTexture(btn_j1);
@@ -135,6 +174,8 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
 
 
 
+
+// Menu des personnages pour le mode "Joueur 1 VS l'Ordinateur"
 void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Surface *fond_surface = SDL_LoadBMP("images/paysage.bmp");
     if (!fond_surface) {
