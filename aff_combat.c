@@ -63,7 +63,7 @@ void afficher_combat(const Combat* combat) {
 
 // Affiche les statuts des équipes
 void afficher_statuts_combat(Combat* combat) {
-    system("clear"); // Efface l'écran
+    afficher_combat(combat); // Affiche l'état du combat
     printf("\n=== TOUR %d ===\n", combat->tour); // Affiche le numéro du tour
     
     // Déterminer si nous sommes en mode JvJ
@@ -197,6 +197,7 @@ void afficher_menu_actions(EtatCombattant* joueur) {
 
 // Affiche le résultat du combat
 void afficher_resultat_combat(Combat* combat) {
+    system("clear");
     bool eq1_vivant = false;
     for (int i = 0; i < combat->equipe1->member_count; i++) {
         if (!est_ko(&combat->equipe1->members[i])) {

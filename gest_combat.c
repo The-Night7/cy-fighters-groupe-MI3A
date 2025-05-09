@@ -146,7 +146,6 @@ void gerer_tour_combat(Combat* combat) {
                         }
                     }
 
-                    afficher_combat(combat);
                     // Tour du joueur humain
                     afficher_statuts_combat(combat);
                     

@@ -68,18 +68,7 @@ int main(int argc, char *argv[]) {
         gerer_tour_combat(&combat);
     }
     
-    printf("\n=== FIN DU COMBAT ===\n");
-    
-    // Déterminer le vainqueur
-    bool eq1_vivant = false;
-    for (int i = 0; i < combat.equipe1->member_count; i++) {
-        if (!est_ko(&combat.equipe1->members[i])) {
-            eq1_vivant = true;
-            break;
-        }
-    }
-    
-    printf("\nL'équipe %s remporte la victoire!\n", eq1_vivant ? equipe1.name : equipe2.name);
+   afficher_resultat_combat(&combat);
     
     // Afficher l'état final
     afficher_statuts_combat(&combat);
