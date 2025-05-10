@@ -5,7 +5,7 @@ LIBS     = `sdl2-config --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 SRC      = src/menu.c src/selection.c
 EXEC     = bin/jeu
 EAU_EXEC = bin/eau
-EAU_SRC  = interface_terminal.c combat.c gestioncombattant.c util_combat.c aff_combat.c gest_combat.c gest_effets.c
+EAU_SRC  = interface_terminal.c gestioncombattant.c util_combat.c aff_combat.c gest_combat.c gest_effets.c
 EAU_LIBS = -lm 
 
 # Add header files as dependencies

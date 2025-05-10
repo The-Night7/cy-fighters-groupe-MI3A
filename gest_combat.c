@@ -415,67 +415,125 @@ void attaque_base(EtatCombattant* attaquant, EtatCombattant* cible) { // Déclar
            degats); // Dégâts infligés
 }
 
-int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant) { // Déclaration de la fonction
-    bool vise_allie = false; // Flag de ciblage allié
-    bool cibles_multiples = false; // Flag de cibles multiples
-    bool soi_meme = false; // Flag de ciblage personnel
+int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant) {
+    if (!combat || !attaquant) return -1;  // Validation des paramètres
+
+    bool cibles_valides_existent = false;
+    bool est_allie = false;
     
-    if (tech_index >= 0 && tech_index < MAX_TECHNIQUES) { // Si technique valide
-        Technique* tech = &attaquant->combattant->techniques[tech_index]; // Récupère la technique
-        
-        switch (tech->type) { // Selon le type
-            case 2: // soin
-            case 3: // bouclier
-            case 5: // boost
-                vise_allie = true; // Cible les alliés
-                break;
-            case 1: // dégâts
-            case 4: // brûlure
-            default:
-                vise_allie = false; // Cible les ennemis
+    // Déterminer si l'attaquant est dans l'équipe 1
+    bool attaquant_equipe1 = false;
+    for (int i = 0; i < combat->equipe1->member_count; i++) {
+        if (attaquant->combattant == &combat->equipe1->members[i]) {
+            attaquant_equipe1 = true;
             break;
-        }
-        
-        cibles_multiples = (tech->ncible == 2); // Vérifie si cibles multiples
-        soi_meme = (tech->ncible == 3); // Vérifie si auto-ciblage
-    }
-        
-    if (soi_meme) { // Si auto-ciblage
-        printf("\nLa technique cible automatiquement le lanceur!\n"); // Message
-        return -3; // Code spécial
-    }
-    
-    if (cibles_multiples) { // Si cibles multiples
-        printf("\nLa technique cible toutes les %s!\n", vise_allie ? "alliés" : "ennemis"); // Message
-        return -2; // Code spécial
-    }
-    
-    bool cibles_valides_existent = false; // Flag de cibles valides
-    if (vise_allie && attaquant->combattant->Vie.courrante > 0) { // Si peut cibler soi-même
-        cibles_valides_existent = true; // Active le flag
-    }
-    
-    bool mode_jvj = true; // Flag de mode JvJ
-    for (int i = 0; i < combat->nombre_participants; i++) { // Vérifie le mode
-        if (combat->participants[i].controleur == ORDI) { // Si IA présente
-            mode_jvj = false; // Désactive le flag
-            break; // Sort de la boucle
         }
     }
 
-    bool est_allie; // Flag d'alliance
-    for (int i = 0; i < combat->nombre_participants; i++) { // Pour chaque participant
-        EtatCombattant* c = &combat->participants[i]; // Récupère l'état
+    // Si c'est une technique spéciale, vérifier la cible appropriée
+    if (tech_index >= 0) {
+        Technique* tech = &attaquant->combattant->techniques[tech_index];
+        est_allie = (strstr(tech->cible, "allié") != NULL);
+    }
+
+    // Afficher les cibles possibles
+    printf("\nCibles disponibles:\n");
+    int num_cible = 1;
+    
+    // Parcourir les deux équipes
+    for (int i = 0; i < combat->nombre_participants; i++) {
+        EtatCombattant* cible_potentielle = &combat->participants[i];
         
-        if (mode_jvj) { // Si mode JvJ
-            bool attaquant_equipe1 = false; // Flag équipe 1 attaquant
-            bool cible_equipe1 = false; // Flag équipe 1 cible
-            
-            for (int j = 0; j < combat->equipe1->member_count; j++) { // Vérifie l'équipe de l'attaquant
-                if (attaquant->combattant == &combat->equipe1->members[j]) { // Si dans équipe 1
-                    attaquant_equipe1 = true; // Active le flag
-                    break; // Sort de la boucle
-                }
+        // Vérifier si la cible est valide
+        bool est_dans_equipe1 = false;
+        for (int j = 0; j < combat->equipe1->member_count; j++) {
+            if (cible_potentielle->combattant == &combat->equipe1->members[j]) {
+                est_dans_equipe1 = true;
+                break;
             }
-            
-            for (int j = 0; j < combat->equipe1->member_count; j++) { // Vé
+        }
+
+        // Déterminer si c'est une cible valide selon le type d'action
+        bool cible_valide = false;
+        if (tech_index >= 0) {
+            // Pour une technique spéciale
+            if (est_allie) {
+                cible_valide = (est_dans_equipe1 == attaquant_equipe1);
+            } else {
+                cible_valide = (est_dans_equipe1 != attaquant_equipe1);
+            }
+        } else {
+            // Pour une attaque de base, cibler uniquement les ennemis
+            cible_valide = (est_dans_equipe1 != attaquant_equipe1);
+        }
+
+        // Afficher la cible si elle est valide et pas KO
+        if (cible_valide && !est_ko(cible_potentielle->combattant)) {
+            printf("%d. %s (PV: %.0f/%.0f)\n", 
+                   num_cible,
+                   cible_potentielle->combattant->nom,
+                   cible_potentielle->combattant->Vie.courrante,
+                   cible_potentielle->combattant->Vie.max);
+            cibles_valides_existent = true;
+            num_cible++;
+        }
+    }
+
+    // Si aucune cible valide n'existe
+    if (!cibles_valides_existent) {
+        printf("Aucune cible valide disponible!\n");
+        return -1;
+    }
+
+    // Demander au joueur de choisir une cible
+    printf("Choisissez une cible (1-%d): ", num_cible - 1);
+    int choix = lire_entier_securise();
+    
+    // Valider le choix
+    if (choix < 1 || choix >= num_cible) {
+        printf("Choix invalide!\n");
+        return -1;
+    }
+
+    return choix - 1;  // Retourner l'index de la cible choisie
+}
+
+int lire_entier_securise() {
+    char buffer[32];
+    if (fgets(buffer, sizeof(buffer), stdin)) {
+        return atoi(buffer);
+    }
+    return -1;
+}
+
+void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
+    afficher_menu_actions(joueur);
+    printf("Votre choix : ");
+    int choix = lire_entier_securise();
+    
+    if (choix == 1) {  // Attaque de base
+        int index_cible = choisir_cible(combat, joueur->controleur, -1, joueur);
+        if (index_cible >= 0) {
+            attaque_base(joueur, &combat->participants[index_cible]);
+        }
+    } else if (choix >= 2 && choix < MAX_TECHNIQUES + 2) {
+        int tech_index = choix - 2;
+        if (joueur->cooldowns[tech_index] == 0 && 
+            joueur->combattant->techniques[tech_index].activable) {
+            int index_cible = choisir_cible(combat, joueur->controleur, tech_index, joueur);
+            if (index_cible >= 0) {
+                utiliser_technique(joueur, tech_index, &combat->participants[index_cible]);
+            }
+        } else {
+            printf("Cette technique n'est pas disponible !\n");
+        }
+    } else {
+        printf("Action invalide !\n");
+    }
+}
+
+void transition_joueurs(Combat* combat, EtatCombattant* joueur_suivant) {
+    printf("\nAppuyez sur Entrée pour passer au joueur suivant...");
+    while (getchar() != '\n');  // Vide le buffer
+    printf("\033[2J\033[H");    // Efface l'écran
+}
