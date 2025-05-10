@@ -173,7 +173,7 @@ Combattant *creer_combattant(const char *nom)
         init_technique(&combattant->techniques[1], "Danse de la pluie",
                        "Augmente l'agilité de toute l'équipe",
                        "Plusieurs alliés", 2,
-                       0, 5, 1, "EFFET_BOOST_AGILITE", 2, 0);
+                       0, 5, 1, "EFFET_BOOST_VITESSE", 2, 0);
 
         init_technique(&combattant->techniques[2], "Bouclier hydrique",
                        "Crée une barrière qui absorbe 50% des dégats pendant 1 tour",
@@ -202,7 +202,7 @@ Combattant *creer_combattant(const char *nom)
         init_technique(&combattant->techniques[2], "Provocation",
                        "Force les ennemis à le cibler",
                        "Soi-même", 3,
-                       0, 3, 1, "EFFET_Provocation", 2, 0);
+                       0, 3, 1, "EFFET_PROVOCATION", 2, 0);
     }
 
     else
