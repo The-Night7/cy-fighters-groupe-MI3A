@@ -12,9 +12,11 @@ TypeEffet convertir_nom_effet(const char* nom_effet) {
     if (strcmp(nom_effet, "EFFET_ETOURDISSEMENT") == 0) return EFFET_ETOURDISSEMENT; // Compare avec "EFFET_ETOURDISSEMENT"
     if (strcmp(nom_effet, "EFFET_BOOST_ATTAQUE") == 0) return EFFET_BOOST_ATTAQUE; // Compare avec "EFFET_BOOST_ATTAQUE"
     if (strcmp(nom_effet, "EFFET_BOOST_DEFENSE") == 0) return EFFET_BOOST_DEFENSE; // Compare avec "EFFET_BOOST_DEFENSE"
+    if (strcmp(nom_effet, "EFFET_BOOST_VITESSE") == 0) return EFFET_BOOST_VITESSE; // Compare avec "EFFET_BOOST_VITESSE" 
     if (strcmp(nom_effet, "EFFET_BRULURE") == 0) return EFFET_BRULURE; // Compare avec "EFFET_BRULURE"
     if (strcmp(nom_effet, "EFFET_RECONSTITUTION") == 0) return EFFET_RECONSTITUTION; // Compare avec "EFFET_RECONSTITUTION"
     if (strcmp(nom_effet, "EFFET_BOUCLIER") == 0) return EFFET_BOUCLIER; // Compare avec "EFFET_BOUCLIER"
+    if (strcmp(nom_effet, "EFFET_PROVOCATION") == 0) return EFFET_PROVOCATION; // Compare avec "EFFET_PROVOCATION"
     
     return EFFET_AUCUN; // Si aucune correspondance, retourne EFFET_AUCUN
 }
@@ -23,12 +25,14 @@ TypeEffet convertir_nom_effet(const char* nom_effet) {
 const char* obtenir_nom_effet(TypeEffet effet) {
     switch(effet) { // Switch sur le type d'effet
         case EFFET_RECONSTITUTION: return "Reconstitution"; // Retourne le nom pour EFFET_RECONSTITUTION
-        case EFFET_POISON: return "Poison"; // Retourne le nom pour EFFET_POISON
+        case EFFET_POISON: return "Poison"; // Retourne le nom pour EFFET_POISON 
         case EFFET_ETOURDISSEMENT: return "Étourdissement"; // Retourne le nom pour EFFET_ETOURDISSEMENT
         case EFFET_BOOST_ATTAQUE: return "Boost d'attaque"; // Retourne le nom pour EFFET_BOOST_ATTAQUE
         case EFFET_BOOST_DEFENSE: return "Boost de défense"; // Retourne le nom pour EFFET_BOOST_DEFENSE
+        case EFFET_BOOST_VITESSE: return "Boost de vitesse"; // Retourne le nom pour EFFET_BOOST_VITESSE
         case EFFET_BRULURE: return "Brûlure"; // Retourne le nom pour EFFET_BRULURE
         case EFFET_BOUCLIER: return "Bouclier"; // Retourne le nom pour EFFET_BOUCLIER
+        case EFFET_PROVOCATION: return "Provocation"; // Retourne le nom pour EFFET_PROVOCATION
         default: return "Aucun"; // Retourne "Aucun" par défaut
     }
 }
@@ -57,11 +61,14 @@ void appliquer_effet(EtatCombattant* cible, TypeEffet effet, int duree, float pu
             case EFFET_BOOST_DEFENSE: // Cas du boost de défense
                 cible->combattant->defense *= (1 + puissance); // Augmente la défense
                 break;
-            default: // Autres cas
-                break; // Ne fait rien
+            case EFFET_BOOST_VITESSE: // Cas du boost de vitesse
+                cible->combattant->vitesse *= (1 + puissance); // Augmente la vitesse
+                break;
+                default: // Autres cas
+                    break; // Ne fait rien
+            }
         }
     }
-}
 
 // Fonction pour appliquer tous les effets en cours
 void appliquer_effets(Combat* combat) {
@@ -90,6 +97,9 @@ void appliquer_effets(Combat* combat) {
                     
                 case EFFET_BOOST_DEFENSE: // Cas du boost de défense
                     break; // Déjà appliqué à l'initialisation
+
+                case EFFET_BOOST_VITESSE: // Cas du boost de vitesse
+                    break; // Déjà appliqué à l'initialisation
                     
                 case EFFET_BRULURE: // Cas de la brûlure
                     float degats_brulure = eff->puissance * (4 - eff->tours_restants); // Calcule les dégâts
@@ -103,7 +113,7 @@ void appliquer_effets(Combat* combat) {
                     cs->combattant->Vie.courrante += soin; // Applique le soin
                     if (cs->combattant->Vie.courrante > cs->combattant->Vie.max) { // Si dépassement des PV max
                         cs->combattant->Vie.courrante = cs->combattant->Vie.max; // Limite aux PV max
-                    }
+}
                     printf("%s récupère %.1f points de vie grâce à la reconstitution!\n", 
                            cs->combattant->nom, soin); // Affiche le message
                     break;
@@ -123,6 +133,10 @@ void appliquer_effets(Combat* combat) {
                             break; // Sort de la boucle
                         }
                     }
+                    break;
+
+                case EFFET_PROVOCATION: // Cas de la provocation
+                    printf("%s est provoqué et doit attaquer!\n", cs->combattant->nom); // Affiche le message
                     break;
             }
             
@@ -166,6 +180,11 @@ void retirer_effet_index(Combat* combat, EtatCombattant* cible, int index_effet)
                 case EFFET_BOOST_DEFENSE: // Cas du boost de défense
                     if (cs->combattant == cible->combattant) { // Si même combattant
                         cs->combattant->defense /= (1 + cible->effets[index_effet].puissance); // Annule le boost
+                    }
+                    break;
+                case EFFET_BOOST_VITESSE: // Cas du boost de vitesse
+                    if (cs->combattant == cible->combattant) { // Si même combattant
+                        cs->combattant->vitesse /= (1 + cible->effets[index_effet].puissance); // Annule le boost
                     }
                     break;
                 default: // Autres cas
