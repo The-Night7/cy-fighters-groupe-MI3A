@@ -11,12 +11,14 @@
 void SDL_ExitWithError(const char *message);
 void afficher_selection_ordi(SDL_Renderer*, SDL_Window*);
 
+// Surbrillance sur les boutons
 void surlignerBouton(SDL_Renderer *renderer, SDL_Rect *rect) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, 0, 150, 255, 100);  // bleu fluo transparent
     SDL_RenderFillRect(renderer, rect);
 }
 
+// Menu des options
 void afficher_menu_options(SDL_Renderer *renderer, SDL_Window *window) {
     // Charger le fond
     SDL_Surface *fond_surface = SDL_LoadBMP("images/paysage.bmp");
@@ -118,6 +120,7 @@ void afficher_menu_options(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_DestroyTexture(instr_texture);
 }
 
+// Choix du mode de jeu
 void afficher_choix_mode_jeu(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Surface *fond_surface = SDL_LoadBMP("images/paysage.bmp");
     if (!fond_surface) SDL_ExitWithError("Erreur fond mode jeu");
@@ -223,7 +226,7 @@ void afficher_choix_mode_jeu(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_DestroyTexture(choix_texture);
 }
 
-
+// Menu pricipal
 int main(int argc, char **argv) {
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
