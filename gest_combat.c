@@ -204,69 +204,69 @@ void configurer_combat(Combat* combat, bool mode_jvj, NiveauDifficulte* difficul
         strncpy(equipe2->name, "Équipe IA", sizeof(equipe2->name) - 1); // Nom par défaut pour l'IA
     }
 
-    printf("\nSélection des personnages pour %s (3 personnages) :\n", equipe1->name); // Début de la sélection
-    printf("Personnages disponibles :\n"); // Liste des personnages
-    printf("1 - Musu\n2 - Freettle\n3 - Ronflex\n4 - Kirishima\n5 - Marco\n6 - Furina\n"); // Options
+    printf("\nSélection des personnages pour %s (3 personnages) :\n", equipe1->name);
+    printf("Personnages disponibles :\n");
+    printf("1 - Musu\n2 - Freettle\n3 - Ronflex\n4 - Kirishima\n5 - Marco\n6 - Furina\n7 - Sakura\n");
 
-    const char* noms_persos[] = {"Musu", "Freettle", "Ronflex", "Kirishima", "Marco", "Furina"}; // Tableau des noms
-    bool persos_pris[6] = {false}; // Tableau de disponibilité
+    const char* noms_persos[] = {"Musu", "Freettle", "Ronflex", "Kirishima", "Marco", "Furina", "Sakura"};
+    bool persos_pris[7] = {false};
 
-    for (int i = 0; i < 3; i++) { // Pour chaque personnage à sélectionner
-        int choix; // Variable de choix
-        do { // Boucle de sélection
-            printf("Choisissez le personnage %d : ", i + 1); // Demande de choix
-            choix = lire_entier_securise(); // Lecture du choix
-            if (choix < 1 || choix > 6) { // Vérification de la validité
-                printf("Choix invalide. Veuillez choisir entre 1 et 6.\n"); // Message d'erreur
-                continue; // Recommence
+    for (int i = 0; i < 3; i++) {
+        int choix;
+        do {
+            printf("Choisissez le personnage %d : ", i + 1);
+            choix = lire_entier_securise();
+            if (choix < 1 || choix > 7) {
+                printf("Choix invalide. Veuillez choisir entre 1 et 7.\n");
+                continue;
             }
-            if (persos_pris[choix - 1]) { // Si déjà pris
-                printf("Ce personnage est déjà pris. Veuillez en choisir un autre.\n"); // Message d'erreur
-                continue; // Recommence
+            if (persos_pris[choix - 1]) {
+                printf("Ce personnage est déjà pris. Veuillez en choisir un autre.\n");
+                continue;
             }
-            break; // Sort de la boucle si valide
-        } while (1); // Continue jusqu'à un choix valide
+            break;
+        } while (1);
 
-        persos_pris[choix - 1] = true; // Marque le personnage comme pris
-        equipe1->members[i] = *creer_combattant(noms_persos[choix - 1]); // Crée le combattant
-        equipe1->member_count++; // Incrémente le compteur
+        persos_pris[choix - 1] = true;
+        equipe1->members[i] = *creer_combattant(noms_persos[choix - 1]);
+        equipe1->member_count++;
     }
 
-    if (mode_jvj) { // Si mode joueur contre joueur
-        printf("\nSélection des personnages pour %s (3 personnages) :\n", equipe2->name); // Sélection équipe 2
-        for (int i = 0; i < 3; i++) { // Pour chaque personnage
-            printf("Personnages disponibles :\n"); // Liste des disponibles
-            for (int j = 0; j < 6; j++) { // Parcours des personnages
-                if (!persos_pris[j]) { // Si disponible
-                    printf("%d - %s\n", j + 1, noms_persos[j]); // Affiche l'option
+    if (mode_jvj) {
+        printf("\nSélection des personnages pour %s (3 personnages) :\n", equipe2->name);
+        for (int i = 0; i < 3; i++) {
+            printf("Personnages disponibles :\n");
+            for (int j = 0; j < 7; j++) {
+                if (!persos_pris[j]) {
+                    printf("%d - %s\n", j + 1, noms_persos[j]);
                 }
             }
 
-            int choix; // Variable de choix
-            do { // Boucle de sélection
-                printf("Choisissez le personnage %d : ", i + 1); // Demande de choix
-                choix = lire_entier_securise(); // Lecture du choix
-                if (choix < 1 || choix > 6) { // Vérification de la validité
-                    printf("Choix invalide. Veuillez choisir entre 1 et 6.\n"); // Message d'erreur
-                    continue; // Recommence
+            int choix;
+            do {
+                printf("Choisissez le personnage %d : ", i + 1);
+                choix = lire_entier_securise();
+                if (choix < 1 || choix > 7) {
+                    printf("Choix invalide. Veuillez choisir entre 1 et 7.\n");
+                    continue;
                 }
-                if (persos_pris[choix - 1]) { // Si déjà pris
-                    printf("Ce personnage est déjà pris. Veuillez en choisir un autre.\n"); // Message d'erreur
-                    continue; // Recommence
+                if (persos_pris[choix - 1]) {
+                    printf("Ce personnage est déjà pris. Veuillez en choisir un autre.\n");
+                    continue;
                 }
-                break; // Sort si valide
-            } while (1); // Continue jusqu'à un choix valide
-            persos_pris[choix - 1] = true; // Marque comme pris
-            equipe2->members[i] = *creer_combattant(noms_persos[choix - 1]); // Crée le combattant
-            equipe2->member_count++; // Incrémente le compteur
+                break;
+            } while (1);
+            persos_pris[choix - 1] = true;
+            equipe2->members[i] = *creer_combattant(noms_persos[choix - 1]);
+            equipe2->member_count++;
         }
-    } else { // Si mode joueur contre ordinateur
-        int count = 0; // Compteur
-        for (int i = 0; count < 3; i = (i + 1) % 6) { // Pour chaque personnage restant
-            if (!persos_pris[i]) { // Si disponible
-                equipe2->members[count] = *creer_combattant(noms_persos[i]); // Crée le combattant
-                equipe2->member_count++; // Incrémente le compteur
-                count++; // Incrémente le compteur général
+    } else {
+        int count = 0;
+        for (int i = 0; count < 3; i = (i + 1) % 7) {
+            if (!persos_pris[i]) {
+                equipe2->members[count] = *creer_combattant(noms_persos[i]);
+                equipe2->member_count++;
+                count++;
             }
         }
     }
