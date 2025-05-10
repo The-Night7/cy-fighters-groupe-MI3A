@@ -319,7 +319,7 @@ void gerer_tour_combat(Combat* combat) { // Déclaration de la fonction
     for (int i = 0; i < combat->nombre_participants; i++) { // Pour chaque participant
         EtatCombattant* cs = &combat->participants[i]; // Récupère l'état du combattant
         if (!est_ko(cs->combattant)) { // Si pas KO
-            cs->turn_meter += cs->combattant->speed; // Augmente la jauge de tour
+            cs->turn_meter += cs->combattant->vitesse; // Augmente la jauge de tour
         }
     }
     

@@ -17,6 +17,7 @@ TypeEffet convertir_nom_effet(const char* nom_effet) {
     if (strcmp(nom_effet, "EFFET_RECONSTITUTION") == 0) return EFFET_RECONSTITUTION; // Compare avec "EFFET_RECONSTITUTION"
     if (strcmp(nom_effet, "EFFET_BOUCLIER") == 0) return EFFET_BOUCLIER; // Compare avec "EFFET_BOUCLIER"
     if (strcmp(nom_effet, "EFFET_PROVOCATION") == 0) return EFFET_PROVOCATION; // Compare avec "EFFET_PROVOCATION"
+    if (strcmp(nom_effet, "EFFET_VOL_DE_VIE") == 0) return EFFET_VOL_DE_VIE; // Compare avec "EFFET_VOL_DE_VIE"
     
     return EFFET_AUCUN; // Si aucune correspondance, retourne EFFET_AUCUN
 }
@@ -33,6 +34,7 @@ const char* obtenir_nom_effet(TypeEffet effet) {
         case EFFET_BRULURE: return "Brûlure"; // Retourne le nom pour EFFET_BRULURE
         case EFFET_BOUCLIER: return "Bouclier"; // Retourne le nom pour EFFET_BOUCLIER
         case EFFET_PROVOCATION: return "Provocation"; // Retourne le nom pour EFFET_PROVOCATION
+        case EFFET_VOL_DE_VIE: return "Vol de vie"; // Retourne le nom pour EFFET_VOL_DE_VIE
         default: return "Aucun"; // Retourne "Aucun" par défaut
     }
 }
@@ -138,17 +140,26 @@ void appliquer_effets(Combat* combat) {
                 case EFFET_PROVOCATION: // Cas de la provocation
                     printf("%s est provoqué et doit attaquer!\n", cs->combattant->nom); // Affiche le message
                     break;
+                    
+                case EFFET_VOL_DE_VIE: // Cas du vol de vie
+                    float vol = cs->combattant->attaque * eff->puissance; // Calcule le vol de vie
+                    cs->combattant->Vie.courrante += vol; // Applique le soin
+                    if (cs->combattant->Vie.courrante > cs->combattant->Vie.max) { // Si dépassement des PV max
+                        cs->combattant->Vie.courrante = cs->combattant->Vie.max; // Limite aux PV max
             }
+                    printf("%s vole %.1f points de vie!\n", cs->combattant->nom, vol); // Affiche le message
+                    break;
+                    }
             
             eff->tours_restants--; // Décrémente la durée
             
             if (eff->tours_restants <= 0) { // Si l'effet est terminé
                 retirer_effet_type(combat, cs, eff->type); // Retire l'effet
                 j--; // Ajuste l'index
+                    }
             }
         }
     }
-}
 
 // Fonction pour retirer un effet à partir de son type
 void retirer_effet_type(Combat* combat, EtatCombattant* cible, TypeEffet type) {
@@ -156,7 +167,7 @@ void retirer_effet_type(Combat* combat, EtatCombattant* cible, TypeEffet type) {
         if (cible->effets[i].type == type) { // Si l'effet correspond
             retirer_effet_index(combat, cible, i); // Retire l'effet
             break; // Sort de la boucle
-        }
+}
     }
 }
 

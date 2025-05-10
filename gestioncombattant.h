@@ -22,9 +22,8 @@ typedef enum {
     EFFET_BRULURE,
     EFFET_RECONSTITUTION,
     EFFET_BOUCLIER,
-    EFFET_BOOST_DEFENSE,
-    EFFET_BOOST_AGILITE,
-    EFFET_PROVOCATION
+    EFFET_PROVOCATION,
+    EFFET_VOL_DE_VIE
 } TypeEffet;
 
 // Structures de base
@@ -57,8 +56,7 @@ typedef struct {
     } Vie;
     float attaque;
     float defense;
-    float agility;
-    float speed;
+    float vitesse;
     Technique techniques[MAX_TECHNIQUES];
 } Combattant;
 

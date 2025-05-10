@@ -67,7 +67,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 200;
         combattant->attaque = 100;
         combattant->defense = 20;
-        combattant->speed = 115;
+        combattant->vitesse = 115;
 
         init_technique(&combattant->techniques[0], "Tempête",
                        "Inflige des dégats d'eau majeurs. Doit se recharger.",
@@ -91,7 +91,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 200;
         combattant->attaque = 100;
         combattant->defense = 20;
-        combattant->speed = 110;
+        combattant->vitesse = 110;
 
         init_technique(&combattant->techniques[0], "Poing de la revanche",
                        "Inflige des dégats mineurs",
@@ -115,7 +115,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 150;
         combattant->attaque = 60;
         combattant->defense = 80;
-        combattant->speed = 120;
+        combattant->vitesse = 120;
 
         init_technique(&combattant->techniques[0], "Flammes régénératrice",
                        "Flammes redonnant 50% des pv max",
@@ -139,7 +139,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 400;
         combattant->attaque = 120;
         combattant->defense = 150;
-        combattant->speed = 50;
+        combattant->vitesse = 50;
 
         init_technique(&combattant->techniques[0], "Plaquage",
                        "Ecrase un ennemi avec son ventre",
@@ -163,7 +163,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 250;
         combattant->attaque = 80;
         combattant->defense = 100;
-        combattant->speed = 130;
+        combattant->vitesse = 130;
 
         init_technique(&combattant->techniques[0], "Bénédiction aquatique",
                        "Soigne un allié de 100PV",
@@ -187,7 +187,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 350;
         combattant->attaque = 140;
         combattant->defense = 180;
-        combattant->speed = 60;
+        combattant->vitesse = 60;
 
         init_technique(&combattant->techniques[0], "Frappe Dévastatrice",
                        "Attaque puissante qui ignore 30% de la défense ennemie",
@@ -211,7 +211,7 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 290;
         combattant->attaque = 150;
         combattant->defense = 120;
-        combattant->speed = 110;
+        combattant->vitesse = 110;
 
         init_technique(&combattant->techniques[0], "Régénération Naturelle",
                        "Récupère 15% de ses PV max à chaque tour",

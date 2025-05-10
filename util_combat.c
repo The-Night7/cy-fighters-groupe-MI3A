@@ -42,13 +42,8 @@ void utiliser_technique(EtatCombattant* attaquant, int tech_index, EtatCombattan
                 float degats = attaquant->combattant->attaque * tech->puissance - cible->combattant->defense * 0.2f;  // Calcul des dégâts
                 if (degats < 0) degats = 0;              // Minimum de 0 dégâts
                 
-                float chance_esquive = cible->combattant->agility * 0.01f;  // Calcul de la chance d'esquive
-                if ((rand() % 100) < (chance_esquive * 100)) {  // Test d'esquive
-                    printf("%s esquive l'attaque !\n", cible->combattant->nom);  // Message d'esquive
-                } else {
-                    cible->combattant->Vie.courrante -= degats;  // Application des dégâts
-                    printf("L'attaque inflige %.1f points de dégâts !\n", degats);  // Message de dégâts
-                }
+                cible->combattant->Vie.courrante -= degats;  // Application des dégâts
+                printf("L'attaque inflige %.1f points de dégâts !\n", degats);  // Message de dégâts
             }
             break;
             
