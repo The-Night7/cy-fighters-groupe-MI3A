@@ -1,39 +1,52 @@
-CC       = gcc
-CFLAGS   = -Wall -Iinclude `sdl2-config --cflags`
-LIBS     = `sdl2-config --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+CC = gcc
+CFLAGS = -Wall -Wextra -Iinclude `sdl2-config --cflags`
+LDFLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -lm
 
-SRC      = src/menu.c src/selection.c src/arene.c src/interface_terminal.c src/gest_combat.c src/gest_effets.c src/aff_combat.c src/util_combat.c src/gestioncombattant.c
-EXEC     = bin/jeu
-EAU_EXEC = bin/eau
-EAU_SRC  = src/interface_terminal.c src/gestioncombattant.c src/util_combat.c src/aff_combat.c src/gest_combat.c src/gest_effets.c logs_combat.c
-EAU_LIBS = -lm 
+SRC_DIR = src
+OBJ_DIR = obj
+BIN_DIR = bin
 
-.PHONY: all compile jeu clean
+# Main game sources and objects
+GAME_SRCS = $(SRC_DIR)/menu.c $(SRC_DIR)/selection.c $(SRC_DIR)/arene.c \
+            $(SRC_DIR)/interface_terminal.c $(SRC_DIR)/gest_combat.c \
+            $(SRC_DIR)/gest_effets.c $(SRC_DIR)/aff_combat.c \
+            $(SRC_DIR)/util_combat.c $(SRC_DIR)/gestioncombattant.c
+GAME_OBJS = $(GAME_SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+GAME_EXEC = $(BIN_DIR)/jeu
 
-all: $(EXEC)
+# Eau version sources and objects  
+EAU_SRCS = $(SRC_DIR)/interface_terminal.c $(SRC_DIR)/gestioncombattant.c \
+           $(SRC_DIR)/util_combat.c $(SRC_DIR)/aff_combat.c \
+           $(SRC_DIR)/gest_combat.c $(SRC_DIR)/gest_effets.c
+EAU_OBJS = $(EAU_SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+EAU_EXEC = $(BIN_DIR)/eau
 
-$(EXEC): $(SRC)
-	@mkdir -p bin
-	@$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
-	@echo "✅ Compilation réussie : $(EXEC)"
+.PHONY: all clean jeu eau
 
-compile: all
+all: $(GAME_EXEC)
 
-jeu: all
+$(GAME_EXEC): $(GAME_OBJS)
+	@mkdir -p $(BIN_DIR)
+	@$(CC) $(GAME_OBJS) -o $@ $(LDFLAGS)
+	@echo "✅ Compilation réussie : $(GAME_EXEC)"
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+jeu: $(GAME_EXEC)
 	@echo "🎮 Lancement du jeu..."
-	@./$(EXEC)
+	@./$(GAME_EXEC)
 
-eau : $(EAU_EXEC)
-
-$(EAU_EXEC) : $(EAU_SRC) $(EAU_HEADERS)
+eau: $(EAU_EXEC)
 	@echo "💦​ C'est de l'eau (mais elle est fraiche)."
-	@mkdir -p bin
-	@$(CC) $(CFLAGS) -o $@ $(EAU_SRC) $(EAU_LIBS)
-	@echo "✅ Compilation réussie : $(EAU_EXEC)"
 	@echo "🎮 Lancement du jeu..."
 	@./$(EAU_EXEC)
 
+$(EAU_EXEC): $(EAU_OBJS)
+	@mkdir -p $(BIN_DIR)
+	@$(CC) $(EAU_OBJS) -o $@ $(LDFLAGS)
+	@echo "✅ Compilation réussie : $(EAU_EXEC)"
 clean:
 	@echo "🧹 Nettoyage..."
-	@rm -f $(EXEC)
-	@rm -f $(EAU_EXEC)
+	@rm -rf $(OBJ_DIR) $(BIN_DIR)
