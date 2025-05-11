@@ -5,5 +5,7 @@
 
 void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window);
 void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window);
+void afficher_selec_difficulte(SDL_Renderer* renderer, SDL_Window* window);
+
 
 #endif
