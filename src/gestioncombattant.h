@@ -18,12 +18,18 @@ typedef enum {
     EFFET_ETOURDISSEMENT,
     EFFET_BOOST_ATTAQUE,
     EFFET_BOOST_DEFENSE,
+<<<<<<< Updated upstream
     EFFET_BOOST_VITESSE,
     EFFET_BRULURE,
     EFFET_RECONSTITUTION,
     EFFET_BOUCLIER,
     EFFET_PROVOCATION,
     EFFET_VOL_DE_VIE
+=======
+    EFFET_BRULURE,
+    EFFET_RECONSTITUTION,
+    EFFET_BOUCLIER
+>>>>>>> Stashed changes
 } TypeEffet;
 
 // Structures de base
@@ -56,7 +62,12 @@ typedef struct {
     } Vie;
     float attaque;
     float defense;
+<<<<<<< Updated upstream
     float vitesse;
+=======
+    float agility;
+    float speed;
+>>>>>>> Stashed changes
     Technique techniques[MAX_TECHNIQUES];
 } Combattant;
 

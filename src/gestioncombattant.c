@@ -67,7 +67,11 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 200;
         combattant->attaque = 100;
         combattant->defense = 20;
+<<<<<<< Updated upstream
         combattant->vitesse = 115;
+=======
+        combattant->speed = 115;
+>>>>>>> Stashed changes
 
         init_technique(&combattant->techniques[0], "Tempête",
                        "Inflige des dégats d'eau majeurs. Doit se recharger.",
@@ -91,7 +95,11 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 200;
         combattant->attaque = 100;
         combattant->defense = 20;
+<<<<<<< Updated upstream
         combattant->vitesse = 110;
+=======
+        combattant->speed = 110;
+>>>>>>> Stashed changes
 
         init_technique(&combattant->techniques[0], "Poing de la revanche",
                        "Inflige des dégats mineurs",
@@ -115,7 +123,11 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 150;
         combattant->attaque = 60;
         combattant->defense = 80;
+<<<<<<< Updated upstream
         combattant->vitesse = 120;
+=======
+        combattant->speed = 120;
+>>>>>>> Stashed changes
 
         init_technique(&combattant->techniques[0], "Flammes régénératrice",
                        "Flammes redonnant 50% des pv max",
@@ -139,7 +151,11 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 400;
         combattant->attaque = 120;
         combattant->defense = 150;
+<<<<<<< Updated upstream
         combattant->vitesse = 50;
+=======
+        combattant->speed = 50;
+>>>>>>> Stashed changes
 
         init_technique(&combattant->techniques[0], "Plaquage",
                        "Ecrase un ennemi avec son ventre",
@@ -163,7 +179,11 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 250;
         combattant->attaque = 80;
         combattant->defense = 100;
+<<<<<<< Updated upstream
         combattant->vitesse = 130;
+=======
+        combattant->speed = 130;
+>>>>>>> Stashed changes
 
         init_technique(&combattant->techniques[0], "Bénédiction aquatique",
                        "Soigne un allié de 100PV",
@@ -173,7 +193,11 @@ Combattant *creer_combattant(const char *nom)
         init_technique(&combattant->techniques[1], "Danse de la pluie",
                        "Augmente l'agilité de toute l'équipe",
                        "Plusieurs alliés", 2,
+<<<<<<< Updated upstream
                        0, 5, 1, "EFFET_BOOST_VITESSE", 2, 0);
+=======
+                       0, 5, 1, "EFFET_BOOST_AGILITE", 2, 0);
+>>>>>>> Stashed changes
 
         init_technique(&combattant->techniques[2], "Bouclier hydrique",
                        "Crée une barrière qui absorbe 50% des dégats pendant 1 tour",
@@ -187,7 +211,11 @@ Combattant *creer_combattant(const char *nom)
         combattant->Vie.courrante = combattant->Vie.max = 350;
         combattant->attaque = 140;
         combattant->defense = 180;
+<<<<<<< Updated upstream
         combattant->vitesse = 60;
+=======
+        combattant->speed = 60;
+>>>>>>> Stashed changes
 
         init_technique(&combattant->techniques[0], "Frappe Dévastatrice",
                        "Attaque puissante qui ignore 30% de la défense ennemie",
@@ -202,6 +230,7 @@ Combattant *creer_combattant(const char *nom)
         init_technique(&combattant->techniques[2], "Provocation",
                        "Force les ennemis à le cibler",
                        "Soi-même", 3,
+<<<<<<< Updated upstream
                        0, 3, 1, "EFFET_PROVOCATION", 2, 0);
     }
 
@@ -230,6 +259,11 @@ Combattant *creer_combattant(const char *nom)
     }
 
 
+=======
+                       0, 3, 1, "EFFET_Provocation", 2, 0);
+    }
+
+>>>>>>> Stashed changes
     else
     {
         free(combattant->nom);
