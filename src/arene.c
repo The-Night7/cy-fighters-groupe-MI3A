@@ -1,6 +1,8 @@
 #include "arene.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
+
 
 // Redéclaration locale de Personnage pour éviter les conflits
 typedef struct {
@@ -65,6 +67,14 @@ int afficher_arene(SDL_Renderer* renderer) {
     SDL_Texture* fond = SDL_CreateTextureFromSurface(renderer, fond_surface);
     SDL_FreeSurface(fond_surface);
 
+    Mix_Music* musique_arene = Mix_LoadMUS("sons/mario.mp3");
+    if (!musique_arene) {
+        SDL_Log("Erreur chargement musique arène : %s", Mix_GetError());
+    } else {
+        Mix_PlayMusic(musique_arene, -1); // -1 = boucle infinie
+    }
+
+
     // 🔽 Taille réduite (largeur et hauteur)
     int sprite_largeur = 120;
     int sprite_hauteur = 180;
@@ -124,6 +134,9 @@ int afficher_arene(SDL_Renderer* renderer) {
         SDL_DestroyTexture(full_sprites[i]);
     }
     SDL_DestroyTexture(fond);
+    Mix_HaltMusic();
+    Mix_FreeMusic(musique_arene);
+
 
     return 0;
 }
