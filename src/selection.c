@@ -31,11 +31,7 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Texture *titre = IMG_LoadTexture(renderer, "images/btn_perso.bmp");
     SDL_Texture *btn_j1 = IMG_LoadTexture(renderer, "images/T1.bmp");
     SDL_Texture *btn_j2 = IMG_LoadTexture(renderer, "images/T2.bmp");
-<<<<<<< Updated upstream
     SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/valider.bmp");
-=======
-    SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/btn_valider.bmp");
->>>>>>> Stashed changes
 
 
     SDL_Rect rect_titre = { (1800 - 300) / 2, 20, 300, 80 };
@@ -198,11 +194,7 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Texture *titre = IMG_LoadTexture(renderer, "images/btn_perso.bmp");
     SDL_Texture *btn_j1 = IMG_LoadTexture(renderer, "images/T1.bmp");
     SDL_Texture *btn_j2 = IMG_LoadTexture(renderer, "images/TO.bmp");
-<<<<<<< Updated upstream
     SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/valider.bmp");
-=======
-    SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/btn_valider.bmp");
->>>>>>> Stashed changes
     
 
     SDL_Rect rect_titre = { (1800 - 300) / 2, 20, 300, 80 };
