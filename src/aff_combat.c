@@ -6,7 +6,7 @@
 
 // Affichage de l'état du combat
 void afficher_combat(const Combat* combat) {
-    //system("clear"); // Efface l'écran
+    system("clear"); // Efface l'écran
     printf("\n--- État du combat (Tour %d) ---\n", combat->tour); // Affiche le numéro du tour
     
     for (int i = 0; i < combat->nombre_participants; i++) { // Parcours de tous les participants

@@ -3,6 +3,8 @@
 #include <stdio.h> // Inclusion des fonctions d'entrée/sortie
 #include <math.h> // Inclusion des fonctions mathématiques  
 #include <string.h> // Inclusion des fonctions de manipulation de chaînes
+#include <ctype.h>  // Pour isdigit
+
 // Fonction interne pour calculer les dégâts infligés par une attaque ou une technique
 float calculer_degats(Combattant* attaquant, Technique* tech, Combattant* cible) { // Déclaration de la fonction avec ses paramètres
     /* en gros je fais dégats = (attaque attaquant x puissance technique) - (défense x 0.2) */ // Commentaire explicatif de la formule
@@ -206,18 +208,18 @@ void configurer_combat(Combat* combat, bool mode_jvj, NiveauDifficulte* difficul
 
     printf("\nSélection des personnages pour %s (3 personnages) :\n", equipe1->name);
     printf("Personnages disponibles :\n");
-    printf("1 - Musu\n2 - Freettle\n3 - Ronflex\n4 - Kirishima\n5 - Marco\n6 - Furina\n7 - Sakura\n");
+    printf("1 - Musu\n2 - Freettle\n3 - Ronflex\n4 - Kirishima\n5 - Marco\n6 - Furina\n7 - Sakura\n8 - King K Rool\n");
 
-    const char* noms_persos[] = {"Musu", "Freettle", "Ronflex", "Kirishima", "Marco", "Furina", "Sakura"};
-    bool persos_pris[7] = {false};
+    const char* noms_persos[] = {"Musu", "Freettle", "Ronflex", "Kirishima", "Marco", "Furina", "Sakura", "King K Rool"};
+    bool persos_pris[8] = {false};
 
     for (int i = 0; i < 3; i++) {
         int choix;
         do {
             printf("Choisissez le personnage %d : ", i + 1);
             choix = lire_entier_securise();
-            if (choix < 1 || choix > 7) {
-                printf("Choix invalide. Veuillez choisir entre 1 et 7.\n");
+            if (choix < 1 || choix > 8) {
+                printf("Choix invalide. Veuillez choisir entre 1 et 8.\n");
                 continue;
             }
             if (persos_pris[choix - 1]) {
@@ -246,8 +248,8 @@ void configurer_combat(Combat* combat, bool mode_jvj, NiveauDifficulte* difficul
             do {
                 printf("Choisissez le personnage %d : ", i + 1);
                 choix = lire_entier_securise();
-                if (choix < 1 || choix > 7) {
-                    printf("Choix invalide. Veuillez choisir entre 1 et 7.\n");
+                if (choix < 1 || choix > 8) {
+                    printf("Choix invalide. Veuillez choisir entre 1 et 8.\n");
                     continue;
                 }
                 if (persos_pris[choix - 1]) {
@@ -415,6 +417,9 @@ void attaque_base(EtatCombattant* attaquant, EtatCombattant* cible) {
            degats);
 }
 int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant) {
+
+    (void)controleur;
+
     if (!combat || !attaquant) return -1;  // Validation des paramètres
 
     bool cibles_valides_existent = false;
@@ -506,10 +511,36 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
 
 int lire_entier_securise() {
     char buffer[32];
+    char *endptr;
+
+    while (1) {
     if (fgets(buffer, sizeof(buffer), stdin)) {
-        return atoi(buffer);
+            // Supprime le retour à la ligne s'il existe
+            buffer[strcspn(buffer, "\n")] = 0;
+            
+            // Ignore les lignes vides
+            if (strlen(buffer) == 0) {
+                printf("Veuillez entrer une valeur : ");
+                continue;
     }
-    return -1;
+
+            // Vérifie si le premier caractère est un chiffre ou un signe
+            if (!isdigit(buffer[0]) && buffer[0] != '-' && buffer[0] != '+') {
+        printf("Entrée invalide. Veuillez entrer un nombre entier : ");
+                continue;
+            }
+
+            // Convertit la chaîne en nombre
+            int valeur = strtol(buffer, &endptr, 10);
+
+            // Vérifie si toute la chaîne a été utilisée dans la conversion
+            if (*endptr == '\0') {
+                return valeur;
+            }
+            
+            printf("Entrée invalide. Veuillez entrer un nombre entier : ");
+        }
+    }
 }
 
 void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
@@ -539,7 +570,14 @@ void gerer_tour_joueur(Combat* combat, EtatCombattant* joueur) {
 }
 
 void transition_joueurs(Combat* combat, EtatCombattant* joueur_suivant) {
-    printf("\nAppuyez sur Entrée pour passer au joueur suivant...");
-    while (getchar() != '\n');  // Vide le buffer
-    printf("\033[2J\033[H");    // Efface l'écran
+    if (combat && joueur_suivant) {  // Vérifie que les pointeurs sont valides
+        // Affiche des informations sur l'état du combat
+        printf("\nTour %d - Au tour de %s !\n", 
+               combat->tour, 
+               joueur_suivant->combattant->nom);
+        
+        printf("\nAppuyez sur Entrée pour continuer...");
+        while (getchar() != '\n');
+        printf("\033[2J\033[H");  // Efface l'écran
+    }
 }

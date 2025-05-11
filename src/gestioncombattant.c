@@ -229,7 +229,7 @@ Combattant *creer_combattant(const char *nom)
                        0.5, 0, 0, NULL, 0, 1);
     }
 
-    else if (strcmp(nom, "King k rool") == 0)
+    else if (strcmp(nom, "King K Rool") == 0)
     {
 
         combattant->Vie.courrante = combattant->Vie.max = 200;
