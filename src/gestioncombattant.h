@@ -1,8 +1,3 @@
-<<<<<<< Updated upstream
-=======
-<<<<<<<< Updated upstream:gestioncombattant.h
-========
->>>>>>> Stashed changes
 #ifndef GESTIONCOMBATTANT_H
 #define GESTIONCOMBATTANT_H
 
@@ -17,20 +12,14 @@
 
 // Énumérations
 typedef enum { JOUEUR, ORDI } TypeJoueur;
-<<<<<<< Updated upstream
-=======
->>>>>>>> Stashed changes:src/gestioncombattant.h
->>>>>>> Stashed changes
+
 typedef enum {
     EFFET_AUCUN,
     EFFET_POISON,
     EFFET_ETOURDISSEMENT,
     EFFET_BOOST_ATTAQUE,
     EFFET_BOOST_DEFENSE,
-<<<<<<< Updated upstream
-=======
-<<<<<<<< Updated upstream:gestioncombattant.h
->>>>>>> Stashed changes
+
     EFFET_BOOST_VITESSE,
     EFFET_BRULURE,
     EFFET_RECONSTITUTION,
@@ -39,15 +28,6 @@ typedef enum {
     EFFET_VOL_DE_VIE
 } TypeEffet;
 
-<<<<<<< Updated upstream
-=======
-========
-    EFFET_BRULURE,
-    EFFET_RECONSTITUTION,
-    EFFET_BOUCLIER
-} TypeEffet;
-
->>>>>>> Stashed changes
 // Structures de base
 typedef struct {
     TypeEffet type;
@@ -70,10 +50,7 @@ typedef struct {
     } Effet;
 } Technique;
 
-<<<<<<< Updated upstream
-=======
->>>>>>>> Stashed changes:src/gestioncombattant.h
->>>>>>> Stashed changes
+
 typedef struct {
     char *nom;
     struct {
@@ -82,21 +59,9 @@ typedef struct {
     } Vie;
     float attaque;
     float defense;
-<<<<<<< Updated upstream
     float vitesse;
     Technique techniques[MAX_TECHNIQUES];
 } Combattant;
-=======
-<<<<<<<< Updated upstream:gestioncombattant.h
-    float vitesse;
-    Technique techniques[MAX_TECHNIQUES];
-} Combattant;
-========
-    float agility;
-    float speed;
-    Technique techniques[MAX_TECHNIQUES];
-} Combattant;
->>>>>>> Stashed changes
 
 typedef struct {
     char name[50];
@@ -129,9 +94,5 @@ void init_technique(Technique *tech, const char *name, const char *description,
                    int nb_tour_recharge, bool possede, const char *nom_effet, 
                    int nb_tour_actifs, int type);
 
-<<<<<<< Updated upstream
 #endif
-=======
-#endif
->>>>>>>> Stashed changes:src/gestioncombattant.h
->>>>>>> Stashed changes
+

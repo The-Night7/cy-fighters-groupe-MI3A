@@ -75,11 +75,11 @@ int afficher_arene(SDL_Renderer* renderer) {
     }
 
 
-    // 🔽 Taille réduite (largeur et hauteur)
+    //Taille réduite (largeur et hauteur)
     int sprite_largeur = 120;
     int sprite_hauteur = 180;
 
-    // 🔼 Plus en haut → modifie y ici (ex: 400 ou 300)
+    //Plus en haut → modifie y ici (ex: 400 ou 300)
     int y_placement = 450;
 
     // Positions des 3 personnages à gauche

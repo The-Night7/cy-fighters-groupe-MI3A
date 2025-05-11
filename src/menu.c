@@ -1,15 +1,19 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include <pthread.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "selection.h"
+#include "interface_terminal.h"
+
 
 #define WINDOW_WIDTH 1800
 #define WINDOW_HEIGHT 900
 
 void SDL_ExitWithError(const char *message);
 void afficher_selection_ordi(SDL_Renderer*, SDL_Window*);
+extern void* executer_terminal(void*);
 
 // Surbrillance sur les boutons
 void surlignerBouton(SDL_Renderer *renderer, SDL_Rect *rect) {
@@ -184,11 +188,14 @@ void afficher_choix_mode_jeu(SDL_Renderer *renderer, SDL_Window *window) {
             } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 if (x >= rect_j1j2.x && x <= rect_j1j2.x + rect_j1j2.w &&
                     y >= rect_j1j2.y && y <= rect_j1j2.y + rect_j1j2.h) {
+                        printf("Mode choisi : Joueur vs Joueur\n");
                         afficher_selection_perso(renderer, window);
 
                 } else if (x >= rect_j1ordi.x && x <= rect_j1ordi.x + rect_j1ordi.w &&
                            y >= rect_j1ordi.y && y <= rect_j1ordi.y + rect_j1ordi.h) {
+                            printf("Mode choisi : Joueur vs Ordinateur\n");
                             afficher_selection_ordi(renderer, window);
+
                 } else if (x >= bouton_retour.x && x <= bouton_retour.x + bouton_retour.w &&
                            y >= bouton_retour.y && y <= bouton_retour.y + bouton_retour.h) {
                     en_choix = SDL_FALSE;
@@ -290,6 +297,9 @@ int main(int argc, char **argv) {
     if (!musique) SDL_ExitWithError("Impossible de charger la musique");
     Mix_PlayMusic(musique, -1);
 
+    pthread_t thread_terminal;
+    pthread_create(&thread_terminal, NULL, executer_terminal, NULL);
+
     SDL_bool program_launched = SDL_TRUE;
     while (program_launched) {
         SDL_Event event;
@@ -357,6 +367,8 @@ int main(int argc, char **argv) {
     Mix_FreeMusic(musique);
     Mix_CloseAudio();
     SDL_Quit();
+    pthread_join(thread_terminal, NULL);
+
 
     return EXIT_SUCCESS;
 }

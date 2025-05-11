@@ -24,8 +24,10 @@ const int ordre_persos[NB_PERSOS] = {
 Personnage equipe1_affiche[3];
 Personnage equipe2_affiche[3];
 
-
 const char *noms[NB_PERSOS] = {"musu", "freettle", "sakura", "ronflex", "kirishima", "kingkrool", "marco", "furina"};
+
+// Déclaration d'une variable globale pour la difficulté
+int difficulte_selectionnee = 1;
 
 void afficher_selec_difficulte(SDL_Renderer* renderer, SDL_Window* window) {
     SDL_Surface* fond_surface = SDL_LoadBMP("images/paysage.bmp");
@@ -55,25 +57,22 @@ void afficher_selec_difficulte(SDL_Renderer* renderer, SDL_Window* window) {
             else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 int x = event.button.x, y = event.button.y;
 
-                if ((x >= rect_facile.x && x <= rect_facile.x + rect_facile.w &&
-                     y >= rect_facile.y && y <= rect_facile.y + rect_facile.h) ||
-                    (x >= rect_moyen.x && x <= rect_moyen.x + rect_moyen.w &&
-                     y >= rect_moyen.y && y <= rect_moyen.y + rect_moyen.h) ||
-                    (x >= rect_difficile.x && x <= rect_difficile.x + rect_difficile.w &&
-                     y >= rect_difficile.y && y <= rect_difficile.y + rect_difficile.h)) {
-
-                    if (x >= rect_facile.x && x <= rect_facile.x + rect_facile.w &&
-                        y >= rect_facile.y && y <= rect_facile.y + rect_facile.h)
-                        SDL_Log("Mode Facile sélectionné !");
-
-                    if (x >= rect_moyen.x && x <= rect_moyen.x + rect_moyen.w &&
-                        y >= rect_moyen.y && y <= rect_moyen.y + rect_moyen.h)
-                        SDL_Log("Mode Moyen sélectionné !");
-
-                    if (x >= rect_difficile.x && x <= rect_difficile.x + rect_difficile.w &&
-                        y >= rect_difficile.y && y <= rect_difficile.y + rect_difficile.h)
-                        SDL_Log("Mode Difficile sélectionné !");
-
+                if (x >= rect_facile.x && x <= rect_facile.x + rect_facile.w &&
+                    y >= rect_facile.y && y <= rect_facile.y + rect_facile.h) {
+                    SDL_Log("Mode Facile sélectionné !");
+                    difficulte_selectionnee = 0;
+                    en_fenetre = SDL_FALSE;
+                }
+                if (x >= rect_moyen.x && x <= rect_moyen.x + rect_moyen.w &&
+                    y >= rect_moyen.y && y <= rect_moyen.y + rect_moyen.h) {
+                    SDL_Log("Mode Moyen sélectionné !");
+                    difficulte_selectionnee = 1;
+                    en_fenetre = SDL_FALSE;
+                }
+                if (x >= rect_difficile.x && x <= rect_difficile.x + rect_difficile.w &&
+                    y >= rect_difficile.y && y <= rect_difficile.y + rect_difficile.h) {
+                    SDL_Log("Mode Difficile sélectionné !");
+                    difficulte_selectionnee = 2;
                     en_fenetre = SDL_FALSE;
                 }
             }
@@ -249,6 +248,8 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
 
 
 void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
+    afficher_selec_difficulte(renderer, window);
+
     SDL_Surface *fond_surface = SDL_LoadBMP("images/paysage.bmp");
     if (!fond_surface) return;
     SDL_Texture *fond = SDL_CreateTextureFromSurface(renderer, fond_surface);
@@ -309,11 +310,11 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Rect pos_equipe1[3] = {{80, 220, 80, 80}, {240, 220, 80, 80}, {400, 220, 80, 80}};
     SDL_Rect pos_equipe2[3] = {{1600, 220, 80, 80}, {1440, 220, 80, 80}, {1280, 220, 80, 80}};
 
+    int historique[6];
+    int historique_top = 0;
+
     int selection_en_cours = 0;
     int index_selection = -1;
-
-    int historique[6];      // mémorise joueur + ordi à chaque tour
-    int historique_top = 0;
 
     SDL_Event event;
     SDL_bool en_fenetre = SDL_TRUE;
@@ -322,10 +323,9 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT ||
                 (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
-                en_fenetre = SDL_FALSE;
-            }
-
-            else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_TAB && historique_top >= 2) {
+                afficher_selection_ordi(renderer, window);  // Retour au menu des persos
+                return;
+            } else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_TAB && historique_top >= 2) {
                 int ordi = historique[--historique_top];
                 int joueur = historique[--historique_top];
 
@@ -338,9 +338,7 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
                 persos[joueur].nom_rect = (SDL_Rect){x_pos[joueur], y_pos[joueur] + hauteur + 5, largeur, 30};
                 persos[joueur].pris = 0;
                 equipe1_count--;
-            }
-
-            else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+            } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 int x = event.button.x, y = event.button.y;
 
                 if (equipe1_count == 3 && equipe2_count == 3 &&
@@ -352,12 +350,8 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
                         equipe2_affiche[i] = persos[equipe2[i]];
                     }
 
-                    afficher_selec_difficulte(renderer, window);
-                    int retour = afficher_arene(renderer);
-                    if (retour == 1)
-                        afficher_selection_ordi(renderer, window);
-
-                    en_fenetre = SDL_FALSE;
+                    afficher_arene(renderer);
+                    return;
                 }
 
                 for (int i = 0; i < NB_PERSOS; i++) {
@@ -369,27 +363,21 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
                         break;
                     }
                 }
-            }
-
-            else if (event.type == SDL_MOUSEBUTTONUP && selection_en_cours && index_selection != -1) {
+            } else if (event.type == SDL_MOUSEBUTTONUP && selection_en_cours && index_selection != -1) {
                 if (equipe1_count < 3) {
-                    // Joueur
                     persos[index_selection].rect = pos_equipe1[equipe1_count];
                     equipe1[equipe1_count++] = index_selection;
                     persos[index_selection].pris = 1;
                     historique[historique_top++] = index_selection;
 
-                    // Ordi (aléatoire)
                     int r = rand() % NB_PERSOS;
-                    while (persos[r].pris != 0)
-                        r = rand() % NB_PERSOS;
+                    while (persos[r].pris != 0) r = rand() % NB_PERSOS;
 
                     persos[r].rect = pos_equipe2[equipe2_count];
                     equipe2[equipe2_count++] = r;
                     persos[r].pris = 2;
                     historique[historique_top++] = r;
                 }
-
                 selection_en_cours = 0;
                 index_selection = -1;
             }
@@ -424,7 +412,6 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_DestroyTexture(btn_j2);
     SDL_DestroyTexture(btn_valider);
 }
-
 
 
 
