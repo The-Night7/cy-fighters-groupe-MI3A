@@ -2,9 +2,15 @@
 #define AFF_COMBAT_H // Définit le header
 
 #include "gestioncombattant.h" // Inclut le header pour la gestion des combattants
-#include "util_combat.h" // Inclut le header pour les utilitaires de combat
-#include "gest_effets.h" // Inclut le header pour la gestion des effets
-// Fonctions d'affichage
+#include "util_combat.h"     // Pour est_ko()
+#include "gest_effets.h"     // Pour obtenir_nom_effet() et convertir_nom_effet()
+#include "logs_combat.h"     // Pour la gestion des logs
+#include <stdio.h>
+
+// Déclaration externe de la variable globale
+extern LogsCombat logs_combat;
+
+void ajouter_log(const char* format, ...);
 void afficher_combat(const Combat* combat); // Fonction pour afficher l'état du combat
 void afficher_statuts_combat(Combat* combat); // Fonction pour afficher les statuts des combattants
 void afficher_menu_actions(EtatCombattant* joueur); // Fonction pour afficher le menu des actions possibles

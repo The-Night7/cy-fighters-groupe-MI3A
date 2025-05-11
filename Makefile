@@ -8,8 +8,8 @@ EAU_EXEC = bin/eau
 EAU_SRC  = interface_terminal.c gestioncombattant.c util_combat.c aff_combat.c gest_combat.c gest_effets.c
 EAU_LIBS = -lm 
 
-# Add header files as dependencies
-EAU_HEADERS = gestioncombattant.h combat.h util_combat.h aff_combat.h gest_combat.h gest_effets.h
+# Modifier la ligne EAU_SRC pour ajouter logs_combat.c
+EAU_SRC  = interface_terminal.c gestioncombattant.c util_combat.c aff_combat.c gest_combat.c gest_effets.c logs_combat.c
 .PHONY: all compile jeu clean
 
 all: $(EXEC)

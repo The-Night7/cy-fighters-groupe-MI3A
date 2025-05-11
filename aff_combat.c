@@ -4,6 +4,139 @@
 #include <math.h>
 #include <string.h> // pour strcmp
 
+void afficher_barre_vie(float pv_courant, float pv_max, int largeur) {
+    int nb_hash = (int)((pv_courant / pv_max) * largeur);
+    int nb_space = largeur - nb_hash;
+    printf("[");
+    for (int i = 0; i < nb_hash; i++) printf("#");
+    for (int i = 0; i < nb_space; i++) printf(" ");
+    printf("]");
+}
+
+void afficher_combat_style(const Combat* combat) {
+    // Efface l'écran
+    system("clear");
+    // Largeur totale de 65 caractères pour un meilleur alignement
+    printf("╔═════════════════════════════════════════════════════════════════════════╗\n");
+    printf("║                          État du Combat (Tour %-3d)                      ║\n", combat->tour);
+    printf("╠═════════════════════════════════════════════════════════════════════════╣\n");
+
+    // Affichage pour chaque équipe
+    for (int eq = 0; eq < 2; eq++) {
+        Equipe* equipe = (eq == 0) ? combat->equipe1 : combat->equipe2;
+        printf("║ [EQUIPE %d] %-58s ║\n", eq + 1, equipe->name);
+        printf("╟─────────────────────────────────────────────────────────────────────────╢\n");
+        
+        for (int i = 0; i < equipe->member_count; i++) {
+            EtatCombattant* cs = NULL;
+            for (int j = 0; j < combat->nombre_participants; j++) {
+                if (combat->participants[j].combattant == &equipe->members[i]) {
+                    cs = &combat->participants[j];
+                    break;
+                }
+            }
+            if (!cs) continue;
+
+            char buffer[70] = {0}; // Buffer pour construire la ligne
+            int pos = 0;
+
+            // Nom + statut KO (15 caractères fixes)
+            pos += snprintf(buffer + pos, sizeof(buffer) - pos, "%-12s%s", 
+                cs->combattant->nom,
+                est_ko(cs->combattant) ? "(KO) " : "     ");
+            // Barre de vie (20 caractères)
+            pos += snprintf(buffer + pos, sizeof(buffer) - pos, " ");
+            afficher_barre_vie(cs->combattant->Vie.courrante, cs->combattant->Vie.max, 20);
+            pos += strlen(buffer);
+            
+            // PV numériques (15 caractères)
+            pos += snprintf(buffer + pos, sizeof(buffer) - pos, " %4.0f/%-4.0f ", 
+                cs->combattant->Vie.courrante, cs->combattant->Vie.max);
+
+            // Effets spéciaux et TM
+            pos += snprintf(buffer + pos, sizeof(buffer) - pos, "│ ");
+            int effets_affiches = 0;
+            for (int k = 0; k < cs->nb_effets && effets_affiches < 3; k++) {
+                char effet_char = '?';
+                // Dans la fonction afficher_combat_style, remplacer le switch par :
+                switch(cs->effets[k].type) {
+                    case EFFET_POISON: effet_char = 'P'; break;
+                    case EFFET_ETOURDISSEMENT: effet_char = 'E'; break;
+                    case EFFET_BOOST_ATTAQUE: effet_char = 'A'; break;
+                    case EFFET_BOOST_DEFENSE: effet_char = 'D'; break;
+                    case EFFET_BRULURE: effet_char = 'B'; break;
+                    case EFFET_BOUCLIER: effet_char = 'S'; break;
+                    case EFFET_BOOST_VITESSE: effet_char = 'V'; break;
+                    case EFFET_RECONSTITUTION: effet_char = 'R'; break;
+                    case EFFET_PROVOCATION: effet_char = 'T'; break;
+                    case EFFET_VOL_DE_VIE: effet_char = 'L'; break;
+                    case EFFET_AUCUN:
+                    default: effet_char = '?'; break;
+                }
+                pos += snprintf(buffer + pos, sizeof(buffer) - pos, "%c%d ", 
+                    effet_char, cs->effets[k].tours_restants);
+                effets_affiches++;
+            }
+
+            // Remplir l'espace restant
+            for (int k = effets_affiches; k < 3; k++) {
+                pos += snprintf(buffer + pos, sizeof(buffer) - pos, "    ");
+        }
+            
+            // Jauge de tour
+            pos += snprintf(buffer + pos, sizeof(buffer) - pos, "│ TM:%3.0f%% ", cs->turn_meter);
+
+            printf("║ %-69s ║\n", buffer);
+    }
+
+        if (eq == 0) {
+            printf("╠═════════════════════════════════════════════════════════════════════════╣\n");
+        }
+    }
+
+
+    // Affichage des techniques spéciales
+    printf("╠═════════════════════════════════════════════════════════════════════════╣\n");
+    EtatCombattant* joueur = &combat->participants[0];
+    printf("║ TECHNIQUES DE %-52s ║\n", joueur->combattant->nom);
+    printf("╟─────────────────────────────────────────────────────────────────────────╢\n");
+    
+    for (int t = 0; t < MAX_TECHNIQUES; t++) {
+        Technique* tech = &joueur->combattant->techniques[t];
+        if (!tech->activable) continue;
+        
+        char buffer[70];
+        snprintf(buffer, sizeof(buffer), "[%d] %-20s │ %s │ Durée: %2d tours",
+            t+1, tech->nom,
+            joueur->cooldowns[t] > 0 ? "Recharge: %2d tours " : "    Disponible    ",
+            tech->Effet.nb_tour_actifs);
+        printf("║ %-69s ║\n", buffer);
+        
+        // Description de la technique sur une ligne séparée
+        if (tech->description[0] != '\0') {
+            printf("║     └─ %-56s ║\n", tech->description);
+}
+    }
+    
+    // Ajout d'une section pour les logs du combat
+    printf("╠═════════════════════════════════════════════════════════════════════════╣\n");
+    printf("║                           DERNIÈRES ACTIONS                             ║\n");
+    printf("╟─────────────────────────────────────────────────────────────────────────╢\n");
+
+    // Affichage des derniers logs
+    for (int i = 0; i < logs_combat.nombre; i++) {
+        int index = (logs_combat.debut + i) % MAX_LOGS;
+        printf("║ %-69s ║\n", logs_combat.messages[index]);
+}
+
+    // Remplir l'espace si moins de MAX_LOGS messages
+    for (int i = logs_combat.nombre; i < MAX_LOGS; i++) {
+        printf("║ %-69s ║\n", "");
+    }
+    
+    printf("╚═════════════════════════════════════════════════════════════════════════╝\n");
+}
+
 // Affichage de l'état du combat
 void afficher_combat(const Combat* combat) {
     system("clear"); // Efface l'écran
@@ -63,7 +196,7 @@ void afficher_combat(const Combat* combat) {
 
 // Affiche les statuts des équipes
 void afficher_statuts_combat(Combat* combat) {
-    afficher_combat(combat); // Affiche l'état du combat
+    afficher_combat_style(combat); // Affiche l'état du combat
     printf("\n=== TOUR %d ===\n", combat->tour); // Affiche le numéro du tour
     
     // Déterminer si nous sommes en mode JvJ
@@ -173,22 +306,27 @@ void afficher_statuts_combat(Combat* combat) {
 
 // Affiche le menu des actions disponibles
 void afficher_menu_actions(EtatCombattant* joueur) {
-    printf("\n%s, choisissez une action:\n", joueur->combattant->nom); // Affiche nom joueur
-    printf("1. Attaque de base\n"); // Option attaque base
+    printf("\n%s, choisissez une action:\n", joueur->combattant->nom);
+    printf("1. Attaque de base\n");
     
     // Affiche les techniques disponibles
-    for (int i = 0; i < MAX_TECHNIQUES; i++) { // Parcours techniques
-        Technique* tech = &joueur->combattant->techniques[i]; // Récupère technique
-        if (tech->activable && joueur->cooldowns[i] == 0) { // Si technique disponible
-            printf("%d. %s (Puissance: %.1f, Recharge: %d tours%s%s)\n", // Affiche détails technique
-                i+2,
-                tech->nom,
-                tech->puissance,
-                tech->nb_tour_recharge,
+    for (int i = 0; i < MAX_TECHNIQUES; i++) {
+        Technique* tech = &joueur->combattant->techniques[i];
+        if (tech->activable && joueur->cooldowns[i] == 0) {
+            // Déclarer la variable avant le printf
+            const char* effet_nom = tech->Effet.possede ? 
+                obtenir_nom_effet(convertir_nom_effet(tech->Effet.nom)) : "";
+            
+            // Un seul printf avec tous les paramètres
+            printf("%d. %s (Puissance: %.1f, Recharge: %d tours%s%s)\n",
+            i+2,
+            tech->nom,
+            tech->puissance,
+            tech->nb_tour_recharge,
                 tech->Effet.possede ? ", Effet: " : "",
-                tech->Effet.possede ? obtenir_nom_effet(convertir_nom_effet(tech->Effet.nom)) : "");
+                effet_nom);
         } else if (tech->activable && joueur->cooldowns[i] > 0) {
-            printf("  %s (en recharge: %d tours)\n", // Affiche technique en recharge
+            printf("  %s (en recharge: %d tours)\n",
                    tech->nom, joueur->cooldowns[i]);
         }
     }
