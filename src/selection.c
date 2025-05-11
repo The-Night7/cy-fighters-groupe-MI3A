@@ -6,10 +6,6 @@
 #include <time.h>
 #include "arene.h"
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 #define NB_PERSOS 8
 
 typedef struct {
@@ -93,31 +89,16 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Texture *titre = IMG_LoadTexture(renderer, "images/btn_perso.bmp");
     SDL_Texture *btn_j1 = IMG_LoadTexture(renderer, "images/T1.bmp");
     SDL_Texture *btn_j2 = IMG_LoadTexture(renderer, "images/T2.bmp");
-<<<<<<< Updated upstream
     SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/valider.bmp");
-=======
-    SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/btn_valider.bmp");
-
->>>>>>> Stashed changes
 
     SDL_Rect rect_titre = { (1800 - 300) / 2, 20, 300, 80 };
     SDL_Rect rect_j1 = { 80, 140, 200, 70 };
     SDL_Rect rect_j2 = { 1800 - 200 - 80, 140, 200, 70 };
     SDL_Rect rect_valider = { (1800 - 200) / 2, 220, 200, 60 };
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
 
     Personnage persos[NB_PERSOS];
     int largeur = 140, hauteur = 140;
 
-<<<<<<< Updated upstream
-    int x_pos[] = {60, 60, 445, 830, 830, 1215, 1600, 1600};
-    int y_pos[] = {460, 640, 460, 460, 640, 460, 460, 640};
-
-=======
     int x_pos[] = {
         60,                         // Musu 
         60,                         // Freettle
@@ -141,7 +122,6 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
     };
 
 
->>>>>>> Stashed changes
     for (int i = 0; i < NB_PERSOS; i++) {
         char chemin[100];
         sprintf(chemin, "images/icon_%s.bmp", noms[ordre_persos[i]]);
@@ -280,12 +260,7 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Texture *titre = IMG_LoadTexture(renderer, "images/btn_perso.bmp");
     SDL_Texture *btn_j1 = IMG_LoadTexture(renderer, "images/T1.bmp");
     SDL_Texture *btn_j2 = IMG_LoadTexture(renderer, "images/TO.bmp");
-<<<<<<< Updated upstream
     SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/valider.bmp");
-=======
-    SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/btn_valider.bmp");
-    
->>>>>>> Stashed changes
 
     SDL_Rect rect_titre = { (1800 - 300) / 2, 20, 300, 80 };
     SDL_Rect rect_j1 = { 80, 140, 200, 70 };
