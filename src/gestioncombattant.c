@@ -28,7 +28,7 @@ void init_technique(Technique *tech, const char *nom, const char *description, c
         tech->Effet.nom = NULL;         // Initialiser à NULL pour éviter des problèmes lors de la libération
     }
     return;
-} 
+}
 
 /*Permet de free les données des combattants après un combat par exemple
 (d'ailleurs j'ai oublié de free nom_effet, je m'en occuperai)*/
@@ -60,7 +60,7 @@ Combattant *creer_combattant(const char *nom)
         return NULL;
     combattant->nom = strdup(nom);
 
-    // Personnage
+    // Personnage 1
     if (strcmp(nom, "Musu") == 0)
     {
 
@@ -84,7 +84,7 @@ Combattant *creer_combattant(const char *nom)
                        "Un allié", 1,
                        -0.2, 0, 1, "EFFET_BOOST_ATTAQUE", 2, 2);
     }
-
+    //2
     else if (strcmp(nom, "Freettle") == 0)
     {
 
@@ -108,7 +108,7 @@ Combattant *creer_combattant(const char *nom)
                        "Un allié", 1,
                        0, 0, 1, "EFFET_BOUCLIER", 2, 3);
     }
-    
+    //3
     else if (strcmp(nom, "Marco") == 0)
     {
 
@@ -132,7 +132,7 @@ Combattant *creer_combattant(const char *nom)
                        "Tous les alliés", 2,
                        0, 1, 1, "EFFET_BOOST_ATTAQUE", 2, 0);
     }
-    
+    //4
     else if (strcmp(nom, "Ronflex") == 0)
     {
 
@@ -156,7 +156,7 @@ Combattant *creer_combattant(const char *nom)
                        "Un allié", 1,
                        0, 1, 1, "EFFET_BOUCLIER", 2, 3);
     }
-
+    //5
     else if (strcmp(nom, "Furina") == 0)
     {
 
@@ -180,7 +180,7 @@ Combattant *creer_combattant(const char *nom)
                        "Un allié", 1,
                        0, 3, 1, "EFFET_BOUCLIER", 1, 3);
     }
-
+    //6
     else if (strcmp(nom, "Kirishima") == 0)
     {
 
@@ -204,7 +204,7 @@ Combattant *creer_combattant(const char *nom)
                        "Soi-même", 3,
                        0, 3, 1, "EFFET_PROVOCATION", 2, 0);
     }
-
+    //7
     else if (strcmp(nom, "Sakura") == 0)
     {
 
@@ -229,6 +229,29 @@ Combattant *creer_combattant(const char *nom)
                        0.5, 0, 0, NULL, 0, 1);
     }
 
+    else if (strcmp(nom, "King k rool") == 0)
+    {
+
+        combattant->Vie.courrante = combattant->Vie.max = 200;
+        combattant->attaque = 100;
+        combattant->defense = 20;
+        combattant->vitesse = 113;
+
+        init_technique(&combattant->techniques[0], "Boulet de canon",
+                       "Inflige des dégats mineurs",
+                       "Un ennemi", 1,
+                       0.3, 0, 0, NULL, 0, 1);
+
+        init_technique(&combattant->techniques[1], "Posture défensive",
+                       "S'ocroie un boost de défense",
+                       "Soi-même", 3,
+                       0, 3, 1, "EFFET_BOOST_DEFENSE", 3, 0);
+
+        init_technique(&combattant->techniques[2], "Mur infranchissable",
+                       "Applique un bouclier moyen à la cible",
+                       "Un allié", 1,
+                       0, 0, 1, "EFFET_BOUCLIER", 2, 3);
+    }
 
     else
     {
