@@ -6,6 +6,8 @@
 #include "aff_combat.h" // Inclut les fonctions d'affichage du combat
 #include "gest_effets.h" // Inclut la gestion des effets
 
+#define MAX_PARTICIPANTS 6  // Maximum de 3 combattants par équipe, donc 6 au total
+
 typedef enum { // Définition d'une énumération pour les niveaux de difficulté
     DIFFICULTE_FACILE = 0, // Niveau facile avec valeur 0
     DIFFICULTE_MOYENNE = 1, // Niveau moyen avec valeur 1

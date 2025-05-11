@@ -6,7 +6,7 @@
 
 // Affichage de l'état du combat
 void afficher_combat(const Combat* combat) {
-    system("clear"); // Efface l'écran
+    //system("clear"); // Efface l'écran
     printf("\n--- État du combat (Tour %d) ---\n", combat->tour); // Affiche le numéro du tour
     
     for (int i = 0; i < combat->nombre_participants; i++) { // Parcours de tous les participants
@@ -196,7 +196,7 @@ void afficher_menu_actions(EtatCombattant* joueur) {
 
 // Affiche le résultat du combat
 void afficher_resultat_combat(Combat* combat) {
-    system("clear"); // Efface écran
+    //system("clear"); // Efface écran
     bool eq1_vivant = false; // Initialise état équipe 1
     for (int i = 0; i < combat->equipe1->member_count; i++) { // Vérifie membres équipe 1
         if (!est_ko(&combat->equipe1->members[i])) { // Si un membre vivant

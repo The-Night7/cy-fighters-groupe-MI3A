@@ -406,15 +406,14 @@ void gerer_tour_combat(Combat* combat) { // Déclaration de la fonction
     printf("\n=== FIN DU TOUR %d ===\n", combat->tour); // Affiche la fin du tour
 }
 
-void attaque_base(EtatCombattant* attaquant, EtatCombattant* cible) { // Déclaration de la fonction
-    float degats = calculer_degats(attaquant->combattant, NULL, cible->combattant); // Calcule les dégâts
-    cible->combattant->Vie.courrante -= degats; // Applique les dégâts
-    printf("%s attaque %s et inflige %.1f dégâts!\n", // Affiche le message
-           attaquant->combattant->nom, // Nom de l'attaquant
-           cible->combattant->nom, // Nom de la cible
-           degats); // Dégâts infligés
+void attaque_base(EtatCombattant* attaquant, EtatCombattant* cible) {
+    float degats = calculer_degats(attaquant->combattant, NULL, cible->combattant);
+    cible->combattant->Vie.courrante -= degats; // C'est ici que les dégâts sont appliqués
+    printf("%s attaque %s et inflige %.1f dégâts!\n",
+           attaquant->combattant->nom,
+           cible->combattant->nom,
+           degats);
 }
-
 int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCombattant* attaquant) {
     if (!combat || !attaquant) return -1;  // Validation des paramètres
 
@@ -440,6 +439,10 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
     printf("\nCibles disponibles:\n");
     int num_cible = 1;
     
+    // Tableau pour stocker les index réels des cibles valides
+    int indices_valides[MAX_PARTICIPANTS];
+    int nb_cibles = 0;
+    
     // Parcourir les deux équipes
     for (int i = 0; i < combat->nombre_participants; i++) {
         EtatCombattant* cible_potentielle = &combat->participants[i];
@@ -450,8 +453,8 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
             if (cible_potentielle->combattant == &combat->equipe1->members[j]) {
                 est_dans_equipe1 = true;
                 break;
-            }
-        }
+    }
+}
 
         // Déterminer si c'est une cible valide selon le type d'action
         bool cible_valide = false;
@@ -474,6 +477,8 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
                    cible_potentielle->combattant->nom,
                    cible_potentielle->combattant->Vie.courrante,
                    cible_potentielle->combattant->Vie.max);
+            indices_valides[nb_cibles] = i;  // Stocke l'index réel
+            nb_cibles++;
             cibles_valides_existent = true;
             num_cible++;
         }
@@ -495,7 +500,8 @@ int choisir_cible(Combat* combat, TypeJoueur controleur, int tech_index, EtatCom
         return -1;
     }
 
-    return choix - 1;  // Retourner l'index de la cible choisie
+    // Retourner l'index réel au lieu de choix - 1
+    return indices_valides[choix - 1];
 }
 
 int lire_entier_securise() {
