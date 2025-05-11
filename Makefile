@@ -2,7 +2,7 @@ CC       = gcc
 CFLAGS   = -Wall -Iinclude `sdl2-config --cflags`
 LIBS     = `sdl2-config --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 
-SRC      = src/menu.c src/selection.c
+SRC      = src/menu.c src/selection.c src/arene.c
 EXEC     = bin/jeu
 EAU_EXEC = bin/eau
 EAU_SRC  = src/interface_terminal.c src/gestioncombattant.c src/util_combat.c src/aff_combat.c src/gest_combat.c src/gest_effets.c logs_combat.c

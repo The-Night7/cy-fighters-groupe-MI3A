@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include "arene.h"
+
 
 #define NB_PERSOS 8
 
@@ -22,6 +24,63 @@ const int ordre_persos[NB_PERSOS] = {
 
 const char *noms[NB_PERSOS] = {"musu", "freettle", "sakura", "ronflex", "kirishima", "kingkrool", "marco", "furina"};
 
+void afficher_selec_difficulte(SDL_Renderer* renderer) {
+    SDL_Surface* fond_surface = SDL_LoadBMP("images/paysage.bmp");
+    if (!fond_surface) return;
+    SDL_Texture* fond = SDL_CreateTextureFromSurface(renderer, fond_surface);
+    SDL_FreeSurface(fond_surface);
+
+    SDL_Texture* btn_facile = IMG_LoadTexture(renderer, "images/facile.bmp");
+    SDL_Texture* btn_moyen = IMG_LoadTexture(renderer, "images/moyen.bmp");
+    SDL_Texture* btn_difficile = IMG_LoadTexture(renderer, "images/difficile.bmp");
+
+    SDL_Rect rect_facile = { (1800 - 200) / 2, 300, 200, 60 };
+    SDL_Rect rect_moyen = { (1800 - 200) / 2, 400, 200, 60 };
+    SDL_Rect rect_difficile = { (1800 - 200) / 2, 500, 200, 60 };
+
+    SDL_Event event;
+    SDL_bool en_fenetre = SDL_TRUE;
+
+    while (en_fenetre) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) en_fenetre = SDL_FALSE;
+            else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
+                en_fenetre = SDL_FALSE;
+            else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                int x = event.button.x, y = event.button.y;
+                if (x >= rect_facile.x && x <= rect_facile.x + rect_facile.w &&
+                    y >= rect_facile.y && y <= rect_facile.y + rect_facile.h) {
+                    SDL_Log("Mode Facile sélectionné !");
+                    en_fenetre = SDL_FALSE;
+                }
+                if (x >= rect_moyen.x && x <= rect_moyen.x + rect_moyen.w &&
+                    y >= rect_moyen.y && y <= rect_moyen.y + rect_moyen.h) {
+                    SDL_Log("Mode Moyen sélectionné !");
+                    en_fenetre = SDL_FALSE;
+                }
+                if (x >= rect_difficile.x && x <= rect_difficile.x + rect_difficile.w &&
+                    y >= rect_difficile.y && y <= rect_difficile.y + rect_difficile.h) {
+                    SDL_Log("Mode Difficile sélectionné !");
+                    en_fenetre = SDL_FALSE;
+                }
+            }
+        }
+
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, fond, NULL, NULL);
+        SDL_RenderCopy(renderer, btn_facile, NULL, &rect_facile);
+        SDL_RenderCopy(renderer, btn_moyen, NULL, &rect_moyen);
+        SDL_RenderCopy(renderer, btn_difficile, NULL, &rect_difficile);
+        SDL_RenderPresent(renderer);
+    }
+
+    SDL_DestroyTexture(fond);
+    SDL_DestroyTexture(btn_facile);
+    SDL_DestroyTexture(btn_moyen);
+    SDL_DestroyTexture(btn_difficile);
+}
+
+
 void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Surface *fond_surface = SDL_LoadBMP("images/paysage.bmp");
     if (!fond_surface) return;
@@ -33,39 +92,16 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Texture *btn_j2 = IMG_LoadTexture(renderer, "images/T2.bmp");
     SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/valider.bmp");
 
-
     SDL_Rect rect_titre = { (1800 - 300) / 2, 20, 300, 80 };
     SDL_Rect rect_j1 = { 80, 140, 200, 70 };
     SDL_Rect rect_j2 = { 1800 - 200 - 80, 140, 200, 70 };
     SDL_Rect rect_valider = { (1800 - 200) / 2, 220, 200, 60 };
 
-
-
     Personnage persos[NB_PERSOS];
     int largeur = 140, hauteur = 140;
 
-    int x_pos[] = {
-        60,                         // Musu 
-        60,                         // Freettle
-        (1800 - 140) / 2 - 385,     // Sakura
-        (1800 - 140) / 2,           // Ronflex
-        830,                        // Kirishima 
-        (1800 - 140) / 2 + 385,     // King K. Rool
-        1600,                       // Marco
-        1600                        // Furina
-    };
-
-    int y_pos[] = {
-        460,                        // Ligne du haut
-        640,                        // Ligne du bas
-        460,
-        460,
-        640,
-        460,
-        460,
-        640
-    };
-
+    int x_pos[] = {60, 60, 445, 830, 830, 1215, 1600, 1600};
+    int y_pos[] = {460, 640, 460, 460, 640, 460, 460, 640};
 
     for (int i = 0; i < NB_PERSOS; i++) {
         char chemin[100];
@@ -121,8 +157,18 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
                 }
             } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 int x = event.button.x, y = event.button.y;
+
+                if (equipe1_count == 3 && equipe2_count == 3 &&
+                    x >= rect_valider.x && x <= rect_valider.x + rect_valider.w &&
+                    y >= rect_valider.y && y <= rect_valider.y + rect_valider.h) {
+                    int retour = afficher_arene(renderer); // do arene.c returns int
+                    if (retour == 0) en_fenetre = SDL_FALSE;
+                    // sinon, on reste dans cette boucle
+                }
+
                 for (int i = 0; i < NB_PERSOS; i++) {
-                    if (persos[i].pris == 0 && x >= persos[i].rect.x && x <= persos[i].rect.x + persos[i].rect.w &&
+                    if (persos[i].pris == 0 &&
+                        x >= persos[i].rect.x && x <= persos[i].rect.x + persos[i].rect.w &&
                         y >= persos[i].rect.y && y <= persos[i].rect.y + persos[i].rect.h) {
                         if (!selection_en_cours) {
                             index_selection = i;
@@ -185,6 +231,8 @@ void afficher_selection_perso(SDL_Renderer *renderer, SDL_Window *window) {
 }
 
 
+
+
 void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Surface *fond_surface = SDL_LoadBMP("images/paysage.bmp");
     if (!fond_surface) return;
@@ -195,7 +243,6 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
     SDL_Texture *btn_j1 = IMG_LoadTexture(renderer, "images/T1.bmp");
     SDL_Texture *btn_j2 = IMG_LoadTexture(renderer, "images/TO.bmp");
     SDL_Texture *btn_valider = IMG_LoadTexture(renderer, "images/valider.bmp");
-    
 
     SDL_Rect rect_titre = { (1800 - 300) / 2, 20, 300, 80 };
     SDL_Rect rect_j1 = { 80, 140, 200, 70 };
@@ -284,6 +331,14 @@ void afficher_selection_ordi(SDL_Renderer *renderer, SDL_Window *window) {
                 }
             } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 int x = event.button.x, y = event.button.y;
+
+                if (equipe1_count == 3 && equipe2_count == 3 &&
+                    x >= rect_valider.x && x <= rect_valider.x + rect_valider.w &&
+                    y >= rect_valider.y && y <= rect_valider.y + rect_valider.h) {
+                    afficher_selec_difficulte(renderer);
+                    en_fenetre = SDL_FALSE;
+                }
+
                 for (int i = 0; i < NB_PERSOS; i++) {
                     if (persos[i].pris == 0 && x >= persos[i].rect.x && x <= persos[i].rect.x + persos[i].rect.w &&
                         y >= persos[i].rect.y && y <= persos[i].rect.y + persos[i].rect.h) {
